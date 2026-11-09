@@ -1,7 +1,9 @@
 # UMBRAL — Bestiario de las Sombras
 
 Juego de captura y combate de criaturas por turnos, con estética de **horror mitológico**.
-Hecho en HTML5 + JavaScript puro, sin dependencias: **abre `index.html` en el navegador y juega** (PC o celular).
+Hecho en HTML5 + JavaScript puro, sin dependencias: **abre `UMBRAL.html` (todo en un solo archivo) o `index.html` en el navegador y juega** (PC o celular).
+
+Para regenerar `UMBRAL.html` después de cambios: `python3 tools/construir_html.py`.
 
 ## Características
 

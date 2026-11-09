@@ -96,7 +96,8 @@ const Game = {
   async titleScreen() {
     this.scene = 'title';
     UI.clear();
-    const has = !!localStorage.getItem(SAVE_KEY);
+    let has = false;
+    try { has = !!localStorage.getItem(SAVE_KEY); } catch (e) { }
     const items = [{ label: 'Nueva partida' }, { label: 'Continuar', disabled: !has }, { label: 'Bestiario completo' }];
     const i = await UI.menu(items, { cls: 'titlemenu', cancel: false, start: has ? 1 : 0 });
     Sfx.unlock();
