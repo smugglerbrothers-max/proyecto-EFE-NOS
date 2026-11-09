@@ -970,10 +970,10 @@ class Battle {
 
 // Paletas de fondo por zona
 const ZONE_BG = {
-  aldea:      { sky1: '#0b0a14', sky2: '#2a1a2a', ground1: '#2a2018', ground2: '#120c08', moon: '#e8d8b0', far: '#08060c', fog: 'rgba(120,100,120,0.18)', mote: '#ffb03b', plat: 'rgba(80,50,40,0.9)', props: 'trees' },
-  bosque:     { sky1: '#07100c', sky2: '#1c2a1e', ground1: '#1e2a18', ground2: '#0a1008', moon: '#d8e8c0', far: '#040a06', fog: 'rgba(100,140,100,0.2)', mote: '#b6ff3b', plat: 'rgba(50,70,40,0.9)', props: 'trees' },
-  pantano:    { sky1: '#060c14', sky2: '#13283a', ground1: '#142a2a', ground2: '#061010', moon: '#b0d8e8', far: '#030810', fog: 'rgba(80,140,160,0.22)', mote: '#3fd0ff', plat: 'rgba(30,70,70,0.9)', props: 'trees' },
-  cementerio: { sky1: '#0c0814', sky2: '#2a1e3a', ground1: '#24202a', ground2: '#0c0a10', moon: '#e8e0f0', far: '#06040a', fog: 'rgba(160,140,180,0.2)', mote: '#c8f4ff', plat: 'rgba(70,60,80,0.9)', props: 'tombs' },
-  cumbres:    { sky1: '#140606', sky2: '#3a1410', ground1: '#2a1a14', ground2: '#100604', moon: '#ff8a5a', far: '#0a0302', fog: 'rgba(180,80,40,0.18)', mote: '#ff6b1a', plat: 'rgba(90,40,20,0.9)', props: 'pillars', spiky: true },
-  cripta:     { sky1: '#050008', sky2: '#1c0a24', ground1: '#1a0a14', ground2: '#050004', moon: '#c43030', far: '#030003', fog: 'rgba(140,40,80,0.2)', mote: '#ff3b3b', plat: 'rgba(80,10,30,0.9)', props: 'pillars' },
+  aldea:      { sky1: '#2a2a4a', sky2: '#7a5a6a', ground1: '#6a5a40', ground2: '#3a3020', moon: '#fff2c8', far: '#2a2236', fog: 'rgba(220,200,220,0.18)', mote: '#ffb03b', plat: 'rgba(140,100,70,0.9)', props: 'trees' },
+  bosque:     { sky1: '#1e3a3a', sky2: '#5a7a5a', ground1: '#4e6a32', ground2: '#26381a', moon: '#f0ffd8', far: '#16261a', fog: 'rgba(200,240,200,0.18)', mote: '#d6ff6b', plat: 'rgba(90,120,60,0.9)', props: 'trees' },
+  pantano:    { sky1: '#1a2e4a', sky2: '#4a7a8a', ground1: '#3a6a5e', ground2: '#1a3430', moon: '#d8f4ff', far: '#122436', fog: 'rgba(180,230,240,0.2)', mote: '#6be0ff', plat: 'rgba(60,110,100,0.9)', props: 'trees' },
+  cementerio: { sky1: '#2a2246', sky2: '#6a5a8a', ground1: '#5a5466', ground2: '#2a2632', moon: '#f4f0ff', far: '#1e1a2e', fog: 'rgba(230,220,250,0.18)', mote: '#e0f8ff', plat: 'rgba(110,100,130,0.9)', props: 'tombs' },
+  cumbres:    { sky1: '#4a1e1a', sky2: '#c46a3a', ground1: '#7a4a30', ground2: '#3a2014', moon: '#ffd08a', far: '#2a120c', fog: 'rgba(255,180,120,0.16)', mote: '#ff8a3b', plat: 'rgba(140,80,40,0.9)', props: 'pillars', spiky: true },
+  cripta:     { sky1: '#1e0a2a', sky2: '#5a2a5a', ground1: '#4a2a3e', ground2: '#1e0e1a', moon: '#ff6a6a', far: '#14061a', fog: 'rgba(220,120,180,0.18)', mote: '#ff5a5a', plat: 'rgba(130,40,70,0.9)', props: 'pillars' },
 };

@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#05020a">
+<meta name="description" content="Captura, entrena y evoluciona 102 criaturas mitológicas de horror.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="UMBRAL">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>UMBRAL — Bestiario de las Sombras</title>
 <style>
 * { box-sizing: border-box; }
@@ -109,6 +117,17 @@ body.touch #touch { display: flex; }
 .abtns .b { position: absolute; right: 90px; top: 70px; width: 62px; height: 62px; font-size: 22px; }
 .abtns .m { position: absolute; left: 0; top: 0; width: 48px; height: 48px; font-size: 20px; }
 
+/* Campo de texto (cuenta en la nube) */
+.inputbox { left: 50%; top: 50%; transform: translate(-50%, -50%); width: 520px; z-index: 40; }
+.tinput { font: inherit; font-size: 22px; padding: 10px 12px; background: #0a0408; color: #f0e0d0; border: 2px solid #6a1a1a; border-radius: 4px; margin: 6px 0 10px; outline: none; }
+.tinput:focus { border-color: #e04040; }
+.inrow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.inrow .mitem { text-align: center; }
+.ranking { left: 50%; top: 20px; transform: translateX(-50%); width: 560px; bottom: 90px; padding: 16px; overflow-y: auto; z-index: 11; }
+.ranking table { width: 100%; border-collapse: collapse; font-size: 18px; }
+.ranking td { padding: 6px 8px; border-bottom: 1px solid #3a1a22; }
+.ranking tr.me td { color: #ffd84a; }
+
 </style>
 </head>
 <body>
@@ -129,6 +148,135 @@ body.touch #touch { display: flex; }
       <button data-act="ok" class="a">A</button>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js" crossorigin="anonymous"></script>
+  <script>/* js/config.js */
+// Configuración pública de Supabase.
+// En Vercel este archivo se genera solo a partir de las variables de entorno
+// SUPABASE_URL y SUPABASE_ANON_KEY (ver tools/vercel-config.js).
+// La "anon key" es pública por diseño: la seguridad la dan las políticas RLS.
+window.UMBRAL_CONFIG = {
+  supabaseUrl: '',
+  supabaseAnonKey: '',
+};
+
+</script>
+  <script>/* js/cloud.js */
+// =====================================================================
+//  UMBRAL — Nube (Supabase): cuenta, guardado sincronizado y ranking.
+//  Si no hay configuración o no hay conexión, el juego sigue con
+//  guardado local sin errores.
+// =====================================================================
+'use strict';
+
+const Cloud = (() => {
+  let sb = null, user = null, alias = null;
+  let pending = null, timer = null;
+  const listeners = [];
+
+  function configured() {
+    const c = window.UMBRAL_CONFIG || {};
+    return !!(c.supabaseUrl && c.supabaseAnonKey && window.supabase && window.supabase.createClient);
+  }
+
+  async function init() {
+    if (!configured()) return false;
+    try {
+      const c = window.UMBRAL_CONFIG;
+      sb = window.supabase.createClient(c.supabaseUrl, c.supabaseAnonKey, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+      });
+      const { data } = await sb.auth.getSession();
+      user = data.session ? data.session.user : null;
+      sb.auth.onAuthStateChange((_e, session) => {
+        user = session ? session.user : null;
+        listeners.forEach(f => f(user));
+      });
+      if (user) await fetchAlias();
+      return true;
+    } catch (e) { console.warn('Nube no disponible', e); sb = null; return false; }
+  }
+
+  async function fetchAlias() {
+    try {
+      const { data } = await sb.from('partidas').select('alias').eq('user_id', user.id).maybeSingle();
+      alias = data ? data.alias : null;
+    } catch (e) { }
+  }
+
+  function cleanAlias(a) {
+    return String(a || '').replace(/[^\p{L}\p{N} _\-.]/gu, '').trim().slice(0, 24) || 'Sellador';
+  }
+
+  async function loginEmail(email) {
+    if (!sb) throw new Error('La nube no está configurada.');
+    const redirect = location.origin + location.pathname;
+    const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect } });
+    if (error) throw error;
+  }
+
+  async function loginAnon() {
+    if (!sb) throw new Error('La nube no está configurada.');
+    const { data, error } = await sb.auth.signInAnonymously();
+    if (error) throw error;
+    user = data.user;
+  }
+
+  async function logout() { if (sb) await sb.auth.signOut(); user = null; alias = null; }
+
+  async function save(data, newAlias) {
+    if (!sb || !user) return false;
+    if (newAlias) alias = cleanAlias(newAlias);
+    const row = { user_id: user.id, datos: data, alias: alias || 'Sellador' };
+    const { error } = await sb.from('partidas').upsert(row, { onConflict: 'user_id' });
+    if (error) { console.warn('Error al guardar en la nube', error); return false; }
+    return true;
+  }
+
+  // Guardado diferido: agrupa varios guardados seguidos en uno.
+  function saveSoon(data) {
+    if (!sb || !user) return;
+    pending = data;
+    clearTimeout(timer);
+    timer = setTimeout(() => { const d = pending; pending = null; save(d); }, 1500);
+  }
+
+  async function setAlias(a) {
+    if (!sb || !user) return false;
+    alias = cleanAlias(a);
+    const { data, error } = await sb.from('partidas').update({ alias }).eq('user_id', user.id).select('user_id');
+    if (error) throw error;
+    if (!data || !data.length) {
+      const r = await sb.from('partidas').insert({ user_id: user.id, alias, datos: { party: [], dex: { seen: [], caught: [] }, flags: {} } });
+      if (r.error) throw r.error;
+    }
+    return true;
+  }
+
+  async function load() {
+    if (!sb || !user) return null;
+    const { data, error } = await sb.from('partidas').select('datos, alias, actualizado').eq('user_id', user.id).maybeSingle();
+    if (error) { console.warn(error); return null; }
+    if (data) alias = data.alias;
+    return data;
+  }
+
+  async function ranking(n = 20) {
+    if (!sb) return [];
+    const { data, error } = await sb.rpc('ranking_bestiario', { limite: n });
+    if (error) { console.warn(error); return []; }
+    return data || [];
+  }
+
+  return {
+    init, loginEmail, loginAnon, logout, save, saveSoon, load, ranking, cleanAlias, setAlias,
+    get enabled() { return !!sb; },
+    get user() { return user; },
+    get alias() { return alias; },
+    onChange(f) { listeners.push(f); },
+  };
+})();
+
+</script>
   <script>/* assets/criaturas/sprites.js */
 // GENERADO por tools/empaquetar_sprites.py — no editar a mano.
 // Ilustraciones que reemplazan el dibujo procedural de cada criatura.
@@ -1838,7 +1986,31 @@ const UI = (() => {
     setTimeout(() => t.classList.add('out'), 1600); setTimeout(() => t.remove(), 2100);
   }
 
-  return { say, menu, clear, panel, el, typeBadge, hpColor, hideDialog, toast };
+  // Campo de texto en pantalla (sin prompt() del navegador)
+  function input(label, opts = {}) {
+    return new Promise(resolve => {
+      const box = el('div', 'menu inputbox');
+      box.appendChild(el('div', 'mtitle', label));
+      const inp = document.createElement('input');
+      inp.type = opts.type || 'text'; inp.maxLength = opts.max || 80; inp.value = opts.value || '';
+      inp.placeholder = opts.placeholder || ''; inp.className = 'tinput';
+      inp.autocomplete = opts.type === 'email' ? 'email' : 'off';
+      box.appendChild(inp);
+      const row = el('div', 'inrow');
+      const ok = el('button', 'mitem focus', opts.okLabel || 'Aceptar');
+      const no = el('button', 'mitem', 'Cancelar');
+      row.appendChild(no); row.appendChild(ok); box.appendChild(row);
+      root().appendChild(box);
+      const done = v => { off(); box.remove(); resolve(v); };
+      ok.addEventListener('click', () => done(inp.value.trim()));
+      no.addEventListener('click', () => done(null));
+      inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') done(inp.value.trim()); if (e.key === 'Escape') done(null); });
+      const off = Input.on(() => { });
+      setTimeout(() => inp.focus(), 50);
+    });
+  }
+
+  return { say, menu, clear, panel, el, typeBadge, hpColor, hideDialog, toast, input };
 })();
 
 // ---------------------------------------------------------------------
@@ -2882,12 +3054,12 @@ class Battle {
 
 // Paletas de fondo por zona
 const ZONE_BG = {
-  aldea:      { sky1: '#0b0a14', sky2: '#2a1a2a', ground1: '#2a2018', ground2: '#120c08', moon: '#e8d8b0', far: '#08060c', fog: 'rgba(120,100,120,0.18)', mote: '#ffb03b', plat: 'rgba(80,50,40,0.9)', props: 'trees' },
-  bosque:     { sky1: '#07100c', sky2: '#1c2a1e', ground1: '#1e2a18', ground2: '#0a1008', moon: '#d8e8c0', far: '#040a06', fog: 'rgba(100,140,100,0.2)', mote: '#b6ff3b', plat: 'rgba(50,70,40,0.9)', props: 'trees' },
-  pantano:    { sky1: '#060c14', sky2: '#13283a', ground1: '#142a2a', ground2: '#061010', moon: '#b0d8e8', far: '#030810', fog: 'rgba(80,140,160,0.22)', mote: '#3fd0ff', plat: 'rgba(30,70,70,0.9)', props: 'trees' },
-  cementerio: { sky1: '#0c0814', sky2: '#2a1e3a', ground1: '#24202a', ground2: '#0c0a10', moon: '#e8e0f0', far: '#06040a', fog: 'rgba(160,140,180,0.2)', mote: '#c8f4ff', plat: 'rgba(70,60,80,0.9)', props: 'tombs' },
-  cumbres:    { sky1: '#140606', sky2: '#3a1410', ground1: '#2a1a14', ground2: '#100604', moon: '#ff8a5a', far: '#0a0302', fog: 'rgba(180,80,40,0.18)', mote: '#ff6b1a', plat: 'rgba(90,40,20,0.9)', props: 'pillars', spiky: true },
-  cripta:     { sky1: '#050008', sky2: '#1c0a24', ground1: '#1a0a14', ground2: '#050004', moon: '#c43030', far: '#030003', fog: 'rgba(140,40,80,0.2)', mote: '#ff3b3b', plat: 'rgba(80,10,30,0.9)', props: 'pillars' },
+  aldea:      { sky1: '#2a2a4a', sky2: '#7a5a6a', ground1: '#6a5a40', ground2: '#3a3020', moon: '#fff2c8', far: '#2a2236', fog: 'rgba(220,200,220,0.18)', mote: '#ffb03b', plat: 'rgba(140,100,70,0.9)', props: 'trees' },
+  bosque:     { sky1: '#1e3a3a', sky2: '#5a7a5a', ground1: '#4e6a32', ground2: '#26381a', moon: '#f0ffd8', far: '#16261a', fog: 'rgba(200,240,200,0.18)', mote: '#d6ff6b', plat: 'rgba(90,120,60,0.9)', props: 'trees' },
+  pantano:    { sky1: '#1a2e4a', sky2: '#4a7a8a', ground1: '#3a6a5e', ground2: '#1a3430', moon: '#d8f4ff', far: '#122436', fog: 'rgba(180,230,240,0.2)', mote: '#6be0ff', plat: 'rgba(60,110,100,0.9)', props: 'trees' },
+  cementerio: { sky1: '#2a2246', sky2: '#6a5a8a', ground1: '#5a5466', ground2: '#2a2632', moon: '#f4f0ff', far: '#1e1a2e', fog: 'rgba(230,220,250,0.18)', mote: '#e0f8ff', plat: 'rgba(110,100,130,0.9)', props: 'tombs' },
+  cumbres:    { sky1: '#4a1e1a', sky2: '#c46a3a', ground1: '#7a4a30', ground2: '#3a2014', moon: '#ffd08a', far: '#2a120c', fog: 'rgba(255,180,120,0.16)', mote: '#ff8a3b', plat: 'rgba(140,80,40,0.9)', props: 'pillars', spiky: true },
+  cripta:     { sky1: '#1e0a2a', sky2: '#5a2a5a', ground1: '#4a2a3e', ground2: '#1e0e1a', moon: '#ff6a6a', far: '#14061a', fog: 'rgba(220,120,180,0.18)', mote: '#ff5a5a', plat: 'rgba(130,40,70,0.9)', props: 'pillars' },
 };
 
 </script>
@@ -3057,7 +3229,7 @@ const TileArt = (() => {
     const c = document.createElement('canvas'); c.width = c.height = TILE;
     const g = c.getContext('2d');
     const r = Art.seeded(key);
-    const groundCol = { bosque: '#1f2616', pantano: '#18231f', cementerio: '#221e24', cumbres: '#2a1a14', cripta: '#1a1218', aldea: '#2a2218' }[zoneId] || '#222';
+    const groundCol = { bosque: '#4a5a32', pantano: '#3a5048', cementerio: '#4c4652', cumbres: '#5e4030', cripta: '#3e2e38', aldea: '#6a5a40' }[zoneId] || '#444';
     const ground = () => {
       g.fillStyle = groundCol; g.fillRect(0, 0, TILE, TILE);
       for (let i = 0; i < 10; i++) { g.fillStyle = `rgba(0,0,0,${0.1 + r() * 0.2})`; g.fillRect(r() * TILE, r() * TILE, 2 + r() * 4, 2 + r() * 3); }
@@ -3067,14 +3239,14 @@ const TileArt = (() => {
       case T.FLOOR: ground(); break;
       case T.PATH: {
         ground();
-        g.fillStyle = zoneId === 'cumbres' ? '#3a2a20' : '#3a3026';
+        g.fillStyle = zoneId === 'cumbres' ? '#8a6448' : '#8c7a5c';
         g.fillRect(0, 0, TILE, TILE);
         for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(0,0,0,0.25)'; g.beginPath(); g.ellipse(r() * TILE, r() * TILE, 4 + r() * 5, 3 + r() * 3, 0, 0, 7); g.fill(); }
         break;
       }
       case T.STONE: {
-        g.fillStyle = '#231a22'; g.fillRect(0, 0, TILE, TILE);
-        g.strokeStyle = '#120a10'; g.lineWidth = 2;
+        g.fillStyle = '#4e3e4a'; g.fillRect(0, 0, TILE, TILE);
+        g.strokeStyle = '#2a1e28'; g.lineWidth = 2;
         g.strokeRect(1, 1, TILE / 2 - 1, TILE / 2 - 1); g.strokeRect(TILE / 2, 1, TILE / 2 - 1, TILE / 2 - 1);
         g.strokeRect(1, TILE / 2, TILE - 2, TILE / 2 - 1);
         if (variant % 3 === 0) { g.fillStyle = 'rgba(120,10,20,0.4)'; g.beginPath(); g.ellipse(30, 30, 8, 5, 0, 0, 7); g.fill(); }
@@ -3082,7 +3254,7 @@ const TileArt = (() => {
       }
       case T.GRASS: {
         ground();
-        const col = { bosque: ['#2f4a1e', '#3d5a26'], pantano: ['#24443a', '#2f5a48'], cementerio: ['#3a3a2a', '#4a4632'], cumbres: ['#4a2a1a', '#5a3420'] }[zoneId] || ['#334', '#445'];
+        const col = { bosque: ['#5e8a32', '#7aa83e'], pantano: ['#3e7a62', '#52967a'], cementerio: ['#6a6a48', '#86825a'], cumbres: ['#8a4a2a', '#a65e34'] }[zoneId] || ['#334', '#445'];
         for (let i = 0; i < 16; i++) {
           const x = r() * TILE, y = 10 + r() * (TILE - 10), h = 12 + r() * 14;
           g.strokeStyle = col[i % 2]; g.lineWidth = 2;
@@ -3105,7 +3277,7 @@ const TileArt = (() => {
       case T.TREE: {
         ground();
         g.fillStyle = 'rgba(0,0,0,0.4)'; g.beginPath(); g.ellipse(24, 42, 16, 5, 0, 0, 7); g.fill();
-        g.strokeStyle = '#120c08'; g.lineCap = 'round';
+        g.strokeStyle = '#3a2618'; g.lineCap = 'round';
         g.lineWidth = 7; g.beginPath(); g.moveTo(24, 44); g.lineTo(24 + (r() - 0.5) * 6, 14); g.stroke();
         g.lineWidth = 3;
         for (let i = 0; i < 5; i++) {
@@ -3116,7 +3288,7 @@ const TileArt = (() => {
         break;
       }
       case T.WATER: {
-        g.fillStyle = '#0b1c22'; g.fillRect(0, 0, TILE, TILE);
+        g.fillStyle = '#1e4a5a'; g.fillRect(0, 0, TILE, TILE);
         for (let i = 0; i < 5; i++) { g.strokeStyle = 'rgba(80,160,180,0.25)'; g.lineWidth = 1.5; g.beginPath(); const y = r() * TILE; g.moveTo(r() * 20, y); g.lineTo(20 + r() * 28, y); g.stroke(); }
         if (variant % 4 === 0) { g.fillStyle = '#3fd0ff'; g.globalAlpha = 0.6; g.beginPath(); g.arc(14, 30, 2, 0, 7); g.arc(20, 30, 2, 0, 7); g.fill(); g.globalAlpha = 1; }
         break;
@@ -3125,9 +3297,9 @@ const TileArt = (() => {
         ground();
         g.fillStyle = 'rgba(0,0,0,0.4)'; g.beginPath(); g.ellipse(24, 42, 14, 4, 0, 0, 7); g.fill();
         if (variant % 3 === 0) {
-          g.fillStyle = '#5a5660'; g.fillRect(21, 8, 6, 34); g.fillRect(12, 16, 24, 6);
+          g.fillStyle = '#9a96a0'; g.fillRect(21, 8, 6, 34); g.fillRect(12, 16, 24, 6);
         } else {
-          g.fillStyle = '#4a4650'; g.beginPath(); g.moveTo(12, 42); g.lineTo(12, 18); g.arc(24, 18, 12, Math.PI, 0); g.lineTo(36, 42); g.closePath(); g.fill();
+          g.fillStyle = '#8a8694'; g.beginPath(); g.moveTo(12, 42); g.lineTo(12, 18); g.arc(24, 18, 12, Math.PI, 0); g.lineTo(36, 42); g.closePath(); g.fill();
           g.fillStyle = '#2a2630'; g.fillRect(18, 22, 12, 2); g.fillRect(18, 27, 12, 2); g.fillRect(18, 32, 8, 2);
         }
         g.fillStyle = '#2a3a1a'; g.fillRect(10, 40, 28, 3);
@@ -3135,7 +3307,7 @@ const TileArt = (() => {
       }
       case T.ROCK: {
         ground();
-        g.fillStyle = '#3a2a24'; g.beginPath(); g.moveTo(6, 42); g.lineTo(10, 18); g.lineTo(22, 8); g.lineTo(38, 14); g.lineTo(44, 42); g.closePath(); g.fill();
+        g.fillStyle = '#6a5048'; g.beginPath(); g.moveTo(6, 42); g.lineTo(10, 18); g.lineTo(22, 8); g.lineTo(38, 14); g.lineTo(44, 42); g.closePath(); g.fill();
         g.strokeStyle = '#ff6b1a'; g.globalAlpha = 0.6; g.lineWidth = 1.5; g.beginPath(); g.moveTo(16, 38); g.lineTo(22, 24); g.lineTo(30, 30); g.lineTo(34, 18); g.stroke(); g.globalAlpha = 1;
         break;
       }
@@ -3146,8 +3318,8 @@ const TileArt = (() => {
         break;
       }
       case T.HOUSE: {
-        g.fillStyle = '#2a1a14'; g.fillRect(0, 0, TILE, TILE);
-        g.strokeStyle = '#1a0e0a'; g.lineWidth = 2;
+        g.fillStyle = '#6a4a34'; g.fillRect(0, 0, TILE, TILE);
+        g.strokeStyle = '#3a2618'; g.lineWidth = 2;
         for (let y = 6; y < TILE; y += 12) { g.beginPath(); g.moveTo(0, y); g.lineTo(TILE, y); g.stroke(); }
         if (variant % 3 === 0) { g.fillStyle = '#e8a040'; g.globalAlpha = 0.8; g.fillRect(16, 16, 14, 14); g.globalAlpha = 1; g.strokeStyle = '#1a0e0a'; g.strokeRect(16, 16, 14, 14); g.beginPath(); g.moveTo(23, 16); g.lineTo(23, 30); g.stroke(); }
         break;
@@ -3319,8 +3491,8 @@ class World {
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       if (this.tile(x, y) === T.HOUSE && this.tile(x, y - 1) !== T.HOUSE) {
         const sx = x * TILE - camX, sy = y * TILE - camY;
-        ctx.fillStyle = '#3a1612'; ctx.beginPath(); ctx.moveTo(sx - 2, sy + 10); ctx.lineTo(sx + TILE / 2, sy - 18); ctx.lineTo(sx + TILE + 2, sy + 10); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#4a1e18'; ctx.fillRect(sx - 2, sy + 6, TILE + 4, 8);
+        ctx.fillStyle = '#7a2a20'; ctx.beginPath(); ctx.moveTo(sx - 2, sy + 10); ctx.lineTo(sx + TILE / 2, sy - 18); ctx.lineTo(sx + TILE + 2, sy + 10); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#943428'; ctx.fillRect(sx - 2, sy + 6, TILE + 4, 8);
         if (this.tile(x, y + 1) !== T.HOUSE && (x + y) % 2 === 0) { ctx.fillStyle = '#120806'; ctx.fillRect(sx + 16, sy + 22, 16, 26); }
       }
       if (this.tile(x, y) === T.HOUSE && this.tile(x, y + 1) !== T.HOUSE && this.tile(x - 1, y) === T.HOUSE && this.tile(x + 1, y) !== T.HOUSE) {
@@ -3362,12 +3534,12 @@ class World {
     const lc = L.getContext('2d');
     lc.globalCompositeOperation = 'source-over';
     const zid = zoneAt(p.y).id;
-    lc.fillStyle = zid === 'aldea' ? 'rgba(5,2,10,0.55)' : zid === 'cripta' ? 'rgba(5,0,5,0.86)' : 'rgba(4,2,8,0.78)';
+    lc.fillStyle = zid === 'aldea' ? 'rgba(20,10,40,0.10)' : zid === 'cripta' ? 'rgba(10,0,15,0.42)' : 'rgba(15,10,35,0.22)';
     lc.clearRect(0, 0, W, H); lc.fillRect(0, 0, W, H);
     lc.globalCompositeOperation = 'destination-out';
     const flick = 1 + Math.sin(this.t * 13) * 0.02 + Math.sin(this.t * 7) * 0.02;
     const hole = (x, y, r) => { const g = lc.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.55, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0)'); lc.fillStyle = g; lc.fillRect(x - r, y - r, r * 2, r * 2); };
-    hole(px * TILE - camX + 24, py * TILE - camY + 22, 230 * flick);
+    hole(px * TILE - camX + 24, py * TILE - camY + 22, 320 * flick);
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (this.tile(x, y) === T.ALTAR) hole(x * TILE - camX + 24, y * TILE - camY + 10, 150 * flick);
     for (let i = 0; i < 12; i++) { // luciérnagas / almas
       const fx = (i * 211 + Math.sin(this.t * 0.5 + i) * 80 - camX * 0.6) % W, fy = (i * 137 + Math.cos(this.t * 0.4 + i * 2) * 60 - camY * 0.6) % H;
@@ -3384,7 +3556,7 @@ class World {
     ctx.restore();
     // viñeta
     const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.85);
-    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.6)');
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.3)');
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
     // cartel de zona
     if (this.zoneBanner > 0) {
@@ -3439,7 +3611,7 @@ const Game = {
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
-    this.titleScreen();
+    Cloud.init().finally(() => this.titleScreen());
   },
 
   update(dt) {
@@ -3501,8 +3673,11 @@ const Game = {
     UI.clear();
     let has = false;
     try { has = !!localStorage.getItem(SAVE_KEY); } catch (e) { }
-    const items = [{ label: 'Nueva partida' }, { label: 'Continuar', disabled: !has }, { label: 'Bestiario completo' }];
-    const i = await UI.menu(items, { cls: 'titlemenu', cancel: false, start: has ? 1 : 0 });
+    const canCloud = Cloud.enabled && Cloud.user;
+    const items = [{ label: 'Nueva partida' }, { label: 'Continuar', disabled: !has && !canCloud }, { label: 'Bestiario completo' }];
+    if (Cloud.enabled) items.push({ label: Cloud.user ? `☁ Nube: ${esc(Cloud.alias || 'conectado')}` : '☁ Cuenta en la nube' });
+    const i = await UI.menu(items, { cls: 'titlemenu', cancel: false, start: has || canCloud ? 1 : 0 });
+    if (i === 3) { await this.cloudMenu(); return this.titleScreen(); }
     Sfx.unlock();
     if (i === 0) {
       if (has) {
@@ -3510,8 +3685,83 @@ const Game = {
         if (c !== 0) return this.titleScreen();
       }
       this.newGame();
-    } else if (i === 1) { this.load(); this.enterWorld(); }
+    } else if (i === 1) { await this.continueGame(); }
     else { await this.dexScreen(true); this.titleScreen(); }
+  },
+
+  async continueGame() {
+    let local = null;
+    try { local = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { }
+    let remote = null;
+    if (Cloud.user) { try { const r = await Cloud.load(); remote = r && r.datos; } catch (e) { } }
+    if (remote && !(remote.party && remote.party.length)) remote = null;
+    if (local && !(local.party && local.party.length)) local = null;
+    let pick = local;
+    if (remote && (!local || (remote.savedAt || 0) > (local.savedAt || 0))) {
+      pick = remote;
+      UI.toast('Partida cargada desde la nube ☁');
+    }
+    if (!pick) return this.titleScreen();
+    this.loadData(pick);
+    this.enterWorld();
+  },
+
+  async cloudMenu() {
+    if (!Cloud.enabled) { await UI.say('La nube no está configurada en esta versión. Tu partida se guarda en este dispositivo.'); return; }
+    while (true) {
+      const u = Cloud.user;
+      const title = u ? `Conectado como ${esc(Cloud.alias || 'Sellador')}${u.email ? ' (' + esc(u.email) + ')' : ' (invitado)'}` : 'Guarda tu partida en la nube y juega en cualquier dispositivo.';
+      const items = u
+        ? [{ label: '⬆ Subir mi partida ahora' }, { label: '⬇ Cargar la partida de la nube' }, { label: '✎ Cambiar mi alias' }, { label: '🏆 Ranking del Bestiario' }, { label: 'Cerrar sesión' }]
+        : [{ label: '✉ Entrar con mi correo' }, { label: '👤 Entrar como invitado' }, { label: '🏆 Ranking del Bestiario' }];
+      const i = await UI.menu(items, { cls: 'pausemenu', title });
+      if (i < 0) return;
+      try {
+        if (!u && i === 0) {
+          const email = await UI.input('Tu correo electrónico. Te enviaremos un enlace para entrar:', { type: 'email', placeholder: 'tucorreo@ejemplo.com', okLabel: 'Enviar enlace' });
+          if (email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { await Cloud.loginEmail(email); await UI.say('Revisa tu correo y abre el enlace en este dispositivo para entrar.'); }
+          else if (email) await UI.say('Ese correo no parece válido.', { auto: 900 });
+        } else if (!u && i === 1) {
+          await Cloud.loginAnon();
+          await this.askAlias();
+          UI.toast('Conectado como invitado ☁');
+        } else if ((!u && i === 2) || (u && i === 3)) {
+          await this.showRanking();
+        } else if (u && i === 0) {
+          if (!this.party.length) { await UI.say('Aún no tienes una partida en curso.', { auto: 900 }); continue; }
+          const ok = await Cloud.save(this.saveData());
+          UI.toast(ok ? 'Partida subida a la nube ☁' : 'No se pudo subir la partida');
+        } else if (u && i === 1) {
+          const r = await Cloud.load();
+          if (!r || !(r.datos.party && r.datos.party.length)) { await UI.say('No hay partida en la nube todavía.', { auto: 900 }); continue; }
+          this.loadData(r.datos);
+          try { localStorage.setItem(SAVE_KEY, JSON.stringify(r.datos)); } catch (e) { }
+          UI.toast('Partida de la nube cargada ☁');
+        } else if (u && i === 2) {
+          await this.askAlias();
+        } else if (u && i === 4) {
+          await Cloud.logout(); UI.toast('Sesión cerrada');
+        }
+      } catch (e) {
+        await UI.say('Error de la nube: ' + (e.message || e), { auto: 1500 });
+      }
+    }
+  },
+
+  async askAlias() {
+    const a = await UI.input('¿Con qué nombre aparecerás en el ranking?', { value: Cloud.alias || '', max: 24, placeholder: 'Sellador' });
+    if (a !== null) await Cloud.setAlias(a);
+  },
+
+  async showRanking() {
+    const rows = await Cloud.ranking(20);
+    const me = Cloud.alias;
+    const html = rows.length
+      ? `<h2 style="margin-top:0">🏆 Ranking del Bestiario</h2><table>${rows.map((r, k) => `<tr class="${r.alias === me ? 'me' : ''}"><td>${k + 1}</td><td>${esc(r.alias)}${r.campeon ? ' 👑' : ''}</td><td>${r.sellados} / ${SPECIES.length}</td></tr>`).join('')}</table>`
+      : '<h2>🏆 Ranking</h2><p>Aún no hay nadie en el ranking. ¡Sé el primero!</p>';
+    const p = UI.panel(html, 'ranking');
+    await UI.menu([{ label: 'Cerrar' }], { cls: 'confirm bottom', cancel: false });
+    p.remove();
   },
 
   // ------------------------------------------------------------------
@@ -3590,15 +3840,16 @@ const Game = {
     while (true) {
       const i = await UI.menu([
         { label: '☠ Criaturas' }, { label: '📖 Bestiario' }, { label: '⚱ Mochila' }, { label: '⚰ Osario (caja)' },
-        { label: '💾 Guardar' }, { label: '⚙ Opciones' },
+        { label: '💾 Guardar' }, { label: '⚙ Opciones' }, { label: '☁ Nube y ranking' },
       ], { cls: 'pausemenu', title: `Monedas de hueso: ${this.money} · Sellados: ${this.dex.caught.size}/${SPECIES.length}`, cancelLabel: '✕ Cerrar' });
       if (i === -1) break;
       if (i === 0) await this.partyMenu({});
       if (i === 1) await this.dexScreen(false);
       if (i === 2) await this.bagMenu({});
       if (i === 3) await this.boxMenu();
-      if (i === 4) { this.save(); await UI.say('Partida guardada en las sombras.', { auto: 700 }); }
+      if (i === 4) { this.save(); await UI.say(Cloud.user ? 'Partida guardada en las sombras... y en la nube.' : 'Partida guardada en las sombras.', { auto: 700 }); }
       if (i === 5) await this.optionsMenu();
+      if (i === 6) await this.cloudMenu();
     }
     this.world.busy = false;
   },
@@ -3924,17 +4175,25 @@ const Game = {
   // ------------------------------------------------------------------
   //  GUARDADO
   // ------------------------------------------------------------------
-  save() {
-    const data = {
+  saveData() {
+    return {
       party: this.party, box: this.box, bag: this.bag, money: this.money, flags: this.flags,
       dex: { seen: [...this.dex.seen], caught: [...this.dex.caught] },
-      player: this.player, respawn: this.respawn, settings: this.settings,
+      player: this.player, respawn: this.respawn, settings: this.settings, savedAt: Date.now(),
     };
+  },
+  save() {
+    const data = this.saveData();
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) { console.warn(e); }
+    Cloud.saveSoon(data);
   },
   load() {
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { }
+    this.loadData(d);
+  },
+  loadData(d) {
     try {
-      const d = JSON.parse(localStorage.getItem(SAVE_KEY));
       const valid = c => c && SPECIES_BY_ID[c.sp];
       this.party = (d.party || []).filter(valid); this.box = (d.box || []).filter(valid);
       [...this.party, ...this.box].forEach(c => { c.moves = (c.moves || []).filter(m => MOVES[m]); refreshStats(c); c.hp = Math.min(c.hp, c.stats.hp); });
@@ -3961,6 +4220,10 @@ window.addEventListener('unhandledrejection', e => { if (e.reason && e.reason.me
       document.getElementById('stage').style.setProperty('--s', s);
     }
     addEventListener('resize', fit); fit();
+    // App instalable: registrar el service worker (solo en https / localhost)
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+      addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
   </script>
 </body>
 </html>

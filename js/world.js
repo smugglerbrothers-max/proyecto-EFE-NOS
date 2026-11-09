@@ -163,7 +163,7 @@ const TileArt = (() => {
     const c = document.createElement('canvas'); c.width = c.height = TILE;
     const g = c.getContext('2d');
     const r = Art.seeded(key);
-    const groundCol = { bosque: '#1f2616', pantano: '#18231f', cementerio: '#221e24', cumbres: '#2a1a14', cripta: '#1a1218', aldea: '#2a2218' }[zoneId] || '#222';
+    const groundCol = { bosque: '#4a5a32', pantano: '#3a5048', cementerio: '#4c4652', cumbres: '#5e4030', cripta: '#3e2e38', aldea: '#6a5a40' }[zoneId] || '#444';
     const ground = () => {
       g.fillStyle = groundCol; g.fillRect(0, 0, TILE, TILE);
       for (let i = 0; i < 10; i++) { g.fillStyle = `rgba(0,0,0,${0.1 + r() * 0.2})`; g.fillRect(r() * TILE, r() * TILE, 2 + r() * 4, 2 + r() * 3); }
@@ -173,14 +173,14 @@ const TileArt = (() => {
       case T.FLOOR: ground(); break;
       case T.PATH: {
         ground();
-        g.fillStyle = zoneId === 'cumbres' ? '#3a2a20' : '#3a3026';
+        g.fillStyle = zoneId === 'cumbres' ? '#8a6448' : '#8c7a5c';
         g.fillRect(0, 0, TILE, TILE);
         for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(0,0,0,0.25)'; g.beginPath(); g.ellipse(r() * TILE, r() * TILE, 4 + r() * 5, 3 + r() * 3, 0, 0, 7); g.fill(); }
         break;
       }
       case T.STONE: {
-        g.fillStyle = '#231a22'; g.fillRect(0, 0, TILE, TILE);
-        g.strokeStyle = '#120a10'; g.lineWidth = 2;
+        g.fillStyle = '#4e3e4a'; g.fillRect(0, 0, TILE, TILE);
+        g.strokeStyle = '#2a1e28'; g.lineWidth = 2;
         g.strokeRect(1, 1, TILE / 2 - 1, TILE / 2 - 1); g.strokeRect(TILE / 2, 1, TILE / 2 - 1, TILE / 2 - 1);
         g.strokeRect(1, TILE / 2, TILE - 2, TILE / 2 - 1);
         if (variant % 3 === 0) { g.fillStyle = 'rgba(120,10,20,0.4)'; g.beginPath(); g.ellipse(30, 30, 8, 5, 0, 0, 7); g.fill(); }
@@ -188,7 +188,7 @@ const TileArt = (() => {
       }
       case T.GRASS: {
         ground();
-        const col = { bosque: ['#2f4a1e', '#3d5a26'], pantano: ['#24443a', '#2f5a48'], cementerio: ['#3a3a2a', '#4a4632'], cumbres: ['#4a2a1a', '#5a3420'] }[zoneId] || ['#334', '#445'];
+        const col = { bosque: ['#5e8a32', '#7aa83e'], pantano: ['#3e7a62', '#52967a'], cementerio: ['#6a6a48', '#86825a'], cumbres: ['#8a4a2a', '#a65e34'] }[zoneId] || ['#334', '#445'];
         for (let i = 0; i < 16; i++) {
           const x = r() * TILE, y = 10 + r() * (TILE - 10), h = 12 + r() * 14;
           g.strokeStyle = col[i % 2]; g.lineWidth = 2;
@@ -211,7 +211,7 @@ const TileArt = (() => {
       case T.TREE: {
         ground();
         g.fillStyle = 'rgba(0,0,0,0.4)'; g.beginPath(); g.ellipse(24, 42, 16, 5, 0, 0, 7); g.fill();
-        g.strokeStyle = '#120c08'; g.lineCap = 'round';
+        g.strokeStyle = '#3a2618'; g.lineCap = 'round';
         g.lineWidth = 7; g.beginPath(); g.moveTo(24, 44); g.lineTo(24 + (r() - 0.5) * 6, 14); g.stroke();
         g.lineWidth = 3;
         for (let i = 0; i < 5; i++) {
@@ -222,7 +222,7 @@ const TileArt = (() => {
         break;
       }
       case T.WATER: {
-        g.fillStyle = '#0b1c22'; g.fillRect(0, 0, TILE, TILE);
+        g.fillStyle = '#1e4a5a'; g.fillRect(0, 0, TILE, TILE);
         for (let i = 0; i < 5; i++) { g.strokeStyle = 'rgba(80,160,180,0.25)'; g.lineWidth = 1.5; g.beginPath(); const y = r() * TILE; g.moveTo(r() * 20, y); g.lineTo(20 + r() * 28, y); g.stroke(); }
         if (variant % 4 === 0) { g.fillStyle = '#3fd0ff'; g.globalAlpha = 0.6; g.beginPath(); g.arc(14, 30, 2, 0, 7); g.arc(20, 30, 2, 0, 7); g.fill(); g.globalAlpha = 1; }
         break;
@@ -231,9 +231,9 @@ const TileArt = (() => {
         ground();
         g.fillStyle = 'rgba(0,0,0,0.4)'; g.beginPath(); g.ellipse(24, 42, 14, 4, 0, 0, 7); g.fill();
         if (variant % 3 === 0) {
-          g.fillStyle = '#5a5660'; g.fillRect(21, 8, 6, 34); g.fillRect(12, 16, 24, 6);
+          g.fillStyle = '#9a96a0'; g.fillRect(21, 8, 6, 34); g.fillRect(12, 16, 24, 6);
         } else {
-          g.fillStyle = '#4a4650'; g.beginPath(); g.moveTo(12, 42); g.lineTo(12, 18); g.arc(24, 18, 12, Math.PI, 0); g.lineTo(36, 42); g.closePath(); g.fill();
+          g.fillStyle = '#8a8694'; g.beginPath(); g.moveTo(12, 42); g.lineTo(12, 18); g.arc(24, 18, 12, Math.PI, 0); g.lineTo(36, 42); g.closePath(); g.fill();
           g.fillStyle = '#2a2630'; g.fillRect(18, 22, 12, 2); g.fillRect(18, 27, 12, 2); g.fillRect(18, 32, 8, 2);
         }
         g.fillStyle = '#2a3a1a'; g.fillRect(10, 40, 28, 3);
@@ -241,7 +241,7 @@ const TileArt = (() => {
       }
       case T.ROCK: {
         ground();
-        g.fillStyle = '#3a2a24'; g.beginPath(); g.moveTo(6, 42); g.lineTo(10, 18); g.lineTo(22, 8); g.lineTo(38, 14); g.lineTo(44, 42); g.closePath(); g.fill();
+        g.fillStyle = '#6a5048'; g.beginPath(); g.moveTo(6, 42); g.lineTo(10, 18); g.lineTo(22, 8); g.lineTo(38, 14); g.lineTo(44, 42); g.closePath(); g.fill();
         g.strokeStyle = '#ff6b1a'; g.globalAlpha = 0.6; g.lineWidth = 1.5; g.beginPath(); g.moveTo(16, 38); g.lineTo(22, 24); g.lineTo(30, 30); g.lineTo(34, 18); g.stroke(); g.globalAlpha = 1;
         break;
       }
@@ -252,8 +252,8 @@ const TileArt = (() => {
         break;
       }
       case T.HOUSE: {
-        g.fillStyle = '#2a1a14'; g.fillRect(0, 0, TILE, TILE);
-        g.strokeStyle = '#1a0e0a'; g.lineWidth = 2;
+        g.fillStyle = '#6a4a34'; g.fillRect(0, 0, TILE, TILE);
+        g.strokeStyle = '#3a2618'; g.lineWidth = 2;
         for (let y = 6; y < TILE; y += 12) { g.beginPath(); g.moveTo(0, y); g.lineTo(TILE, y); g.stroke(); }
         if (variant % 3 === 0) { g.fillStyle = '#e8a040'; g.globalAlpha = 0.8; g.fillRect(16, 16, 14, 14); g.globalAlpha = 1; g.strokeStyle = '#1a0e0a'; g.strokeRect(16, 16, 14, 14); g.beginPath(); g.moveTo(23, 16); g.lineTo(23, 30); g.stroke(); }
         break;
@@ -425,8 +425,8 @@ class World {
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       if (this.tile(x, y) === T.HOUSE && this.tile(x, y - 1) !== T.HOUSE) {
         const sx = x * TILE - camX, sy = y * TILE - camY;
-        ctx.fillStyle = '#3a1612'; ctx.beginPath(); ctx.moveTo(sx - 2, sy + 10); ctx.lineTo(sx + TILE / 2, sy - 18); ctx.lineTo(sx + TILE + 2, sy + 10); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#4a1e18'; ctx.fillRect(sx - 2, sy + 6, TILE + 4, 8);
+        ctx.fillStyle = '#7a2a20'; ctx.beginPath(); ctx.moveTo(sx - 2, sy + 10); ctx.lineTo(sx + TILE / 2, sy - 18); ctx.lineTo(sx + TILE + 2, sy + 10); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#943428'; ctx.fillRect(sx - 2, sy + 6, TILE + 4, 8);
         if (this.tile(x, y + 1) !== T.HOUSE && (x + y) % 2 === 0) { ctx.fillStyle = '#120806'; ctx.fillRect(sx + 16, sy + 22, 16, 26); }
       }
       if (this.tile(x, y) === T.HOUSE && this.tile(x, y + 1) !== T.HOUSE && this.tile(x - 1, y) === T.HOUSE && this.tile(x + 1, y) !== T.HOUSE) {
@@ -468,12 +468,12 @@ class World {
     const lc = L.getContext('2d');
     lc.globalCompositeOperation = 'source-over';
     const zid = zoneAt(p.y).id;
-    lc.fillStyle = zid === 'aldea' ? 'rgba(5,2,10,0.55)' : zid === 'cripta' ? 'rgba(5,0,5,0.86)' : 'rgba(4,2,8,0.78)';
+    lc.fillStyle = zid === 'aldea' ? 'rgba(20,10,40,0.10)' : zid === 'cripta' ? 'rgba(10,0,15,0.42)' : 'rgba(15,10,35,0.22)';
     lc.clearRect(0, 0, W, H); lc.fillRect(0, 0, W, H);
     lc.globalCompositeOperation = 'destination-out';
     const flick = 1 + Math.sin(this.t * 13) * 0.02 + Math.sin(this.t * 7) * 0.02;
     const hole = (x, y, r) => { const g = lc.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.55, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0)'); lc.fillStyle = g; lc.fillRect(x - r, y - r, r * 2, r * 2); };
-    hole(px * TILE - camX + 24, py * TILE - camY + 22, 230 * flick);
+    hole(px * TILE - camX + 24, py * TILE - camY + 22, 320 * flick);
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (this.tile(x, y) === T.ALTAR) hole(x * TILE - camX + 24, y * TILE - camY + 10, 150 * flick);
     for (let i = 0; i < 12; i++) { // luciérnagas / almas
       const fx = (i * 211 + Math.sin(this.t * 0.5 + i) * 80 - camX * 0.6) % W, fy = (i * 137 + Math.cos(this.t * 0.4 + i * 2) * 60 - camY * 0.6) % H;
@@ -490,7 +490,7 @@ class World {
     ctx.restore();
     // viñeta
     const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.85);
-    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.6)');
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.3)');
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
     // cartel de zona
     if (this.zoneBanner > 0) {

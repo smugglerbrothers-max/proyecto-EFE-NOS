@@ -158,7 +158,31 @@ const UI = (() => {
     setTimeout(() => t.classList.add('out'), 1600); setTimeout(() => t.remove(), 2100);
   }
 
-  return { say, menu, clear, panel, el, typeBadge, hpColor, hideDialog, toast };
+  // Campo de texto en pantalla (sin prompt() del navegador)
+  function input(label, opts = {}) {
+    return new Promise(resolve => {
+      const box = el('div', 'menu inputbox');
+      box.appendChild(el('div', 'mtitle', label));
+      const inp = document.createElement('input');
+      inp.type = opts.type || 'text'; inp.maxLength = opts.max || 80; inp.value = opts.value || '';
+      inp.placeholder = opts.placeholder || ''; inp.className = 'tinput';
+      inp.autocomplete = opts.type === 'email' ? 'email' : 'off';
+      box.appendChild(inp);
+      const row = el('div', 'inrow');
+      const ok = el('button', 'mitem focus', opts.okLabel || 'Aceptar');
+      const no = el('button', 'mitem', 'Cancelar');
+      row.appendChild(no); row.appendChild(ok); box.appendChild(row);
+      root().appendChild(box);
+      const done = v => { off(); box.remove(); resolve(v); };
+      ok.addEventListener('click', () => done(inp.value.trim()));
+      no.addEventListener('click', () => done(null));
+      inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') done(inp.value.trim()); if (e.key === 'Escape') done(null); });
+      const off = Input.on(() => { });
+      setTimeout(() => inp.focus(), 50);
+    });
+  }
+
+  return { say, menu, clear, panel, el, typeBadge, hpColor, hideDialog, toast, input };
 })();
 
 // ---------------------------------------------------------------------

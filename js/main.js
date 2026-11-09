@@ -36,7 +36,7 @@ const Game = {
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
-    this.titleScreen();
+    Cloud.init().finally(() => this.titleScreen());
   },
 
   update(dt) {
@@ -98,8 +98,11 @@ const Game = {
     UI.clear();
     let has = false;
     try { has = !!localStorage.getItem(SAVE_KEY); } catch (e) { }
-    const items = [{ label: 'Nueva partida' }, { label: 'Continuar', disabled: !has }, { label: 'Bestiario completo' }];
-    const i = await UI.menu(items, { cls: 'titlemenu', cancel: false, start: has ? 1 : 0 });
+    const canCloud = Cloud.enabled && Cloud.user;
+    const items = [{ label: 'Nueva partida' }, { label: 'Continuar', disabled: !has && !canCloud }, { label: 'Bestiario completo' }];
+    if (Cloud.enabled) items.push({ label: Cloud.user ? `☁ Nube: ${esc(Cloud.alias || 'conectado')}` : '☁ Cuenta en la nube' });
+    const i = await UI.menu(items, { cls: 'titlemenu', cancel: false, start: has || canCloud ? 1 : 0 });
+    if (i === 3) { await this.cloudMenu(); return this.titleScreen(); }
     Sfx.unlock();
     if (i === 0) {
       if (has) {
@@ -107,8 +110,83 @@ const Game = {
         if (c !== 0) return this.titleScreen();
       }
       this.newGame();
-    } else if (i === 1) { this.load(); this.enterWorld(); }
+    } else if (i === 1) { await this.continueGame(); }
     else { await this.dexScreen(true); this.titleScreen(); }
+  },
+
+  async continueGame() {
+    let local = null;
+    try { local = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { }
+    let remote = null;
+    if (Cloud.user) { try { const r = await Cloud.load(); remote = r && r.datos; } catch (e) { } }
+    if (remote && !(remote.party && remote.party.length)) remote = null;
+    if (local && !(local.party && local.party.length)) local = null;
+    let pick = local;
+    if (remote && (!local || (remote.savedAt || 0) > (local.savedAt || 0))) {
+      pick = remote;
+      UI.toast('Partida cargada desde la nube ☁');
+    }
+    if (!pick) return this.titleScreen();
+    this.loadData(pick);
+    this.enterWorld();
+  },
+
+  async cloudMenu() {
+    if (!Cloud.enabled) { await UI.say('La nube no está configurada en esta versión. Tu partida se guarda en este dispositivo.'); return; }
+    while (true) {
+      const u = Cloud.user;
+      const title = u ? `Conectado como ${esc(Cloud.alias || 'Sellador')}${u.email ? ' (' + esc(u.email) + ')' : ' (invitado)'}` : 'Guarda tu partida en la nube y juega en cualquier dispositivo.';
+      const items = u
+        ? [{ label: '⬆ Subir mi partida ahora' }, { label: '⬇ Cargar la partida de la nube' }, { label: '✎ Cambiar mi alias' }, { label: '🏆 Ranking del Bestiario' }, { label: 'Cerrar sesión' }]
+        : [{ label: '✉ Entrar con mi correo' }, { label: '👤 Entrar como invitado' }, { label: '🏆 Ranking del Bestiario' }];
+      const i = await UI.menu(items, { cls: 'pausemenu', title });
+      if (i < 0) return;
+      try {
+        if (!u && i === 0) {
+          const email = await UI.input('Tu correo electrónico. Te enviaremos un enlace para entrar:', { type: 'email', placeholder: 'tucorreo@ejemplo.com', okLabel: 'Enviar enlace' });
+          if (email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { await Cloud.loginEmail(email); await UI.say('Revisa tu correo y abre el enlace en este dispositivo para entrar.'); }
+          else if (email) await UI.say('Ese correo no parece válido.', { auto: 900 });
+        } else if (!u && i === 1) {
+          await Cloud.loginAnon();
+          await this.askAlias();
+          UI.toast('Conectado como invitado ☁');
+        } else if ((!u && i === 2) || (u && i === 3)) {
+          await this.showRanking();
+        } else if (u && i === 0) {
+          if (!this.party.length) { await UI.say('Aún no tienes una partida en curso.', { auto: 900 }); continue; }
+          const ok = await Cloud.save(this.saveData());
+          UI.toast(ok ? 'Partida subida a la nube ☁' : 'No se pudo subir la partida');
+        } else if (u && i === 1) {
+          const r = await Cloud.load();
+          if (!r || !(r.datos.party && r.datos.party.length)) { await UI.say('No hay partida en la nube todavía.', { auto: 900 }); continue; }
+          this.loadData(r.datos);
+          try { localStorage.setItem(SAVE_KEY, JSON.stringify(r.datos)); } catch (e) { }
+          UI.toast('Partida de la nube cargada ☁');
+        } else if (u && i === 2) {
+          await this.askAlias();
+        } else if (u && i === 4) {
+          await Cloud.logout(); UI.toast('Sesión cerrada');
+        }
+      } catch (e) {
+        await UI.say('Error de la nube: ' + (e.message || e), { auto: 1500 });
+      }
+    }
+  },
+
+  async askAlias() {
+    const a = await UI.input('¿Con qué nombre aparecerás en el ranking?', { value: Cloud.alias || '', max: 24, placeholder: 'Sellador' });
+    if (a !== null) await Cloud.setAlias(a);
+  },
+
+  async showRanking() {
+    const rows = await Cloud.ranking(20);
+    const me = Cloud.alias;
+    const html = rows.length
+      ? `<h2 style="margin-top:0">🏆 Ranking del Bestiario</h2><table>${rows.map((r, k) => `<tr class="${r.alias === me ? 'me' : ''}"><td>${k + 1}</td><td>${esc(r.alias)}${r.campeon ? ' 👑' : ''}</td><td>${r.sellados} / ${SPECIES.length}</td></tr>`).join('')}</table>`
+      : '<h2>🏆 Ranking</h2><p>Aún no hay nadie en el ranking. ¡Sé el primero!</p>';
+    const p = UI.panel(html, 'ranking');
+    await UI.menu([{ label: 'Cerrar' }], { cls: 'confirm bottom', cancel: false });
+    p.remove();
   },
 
   // ------------------------------------------------------------------
@@ -187,15 +265,16 @@ const Game = {
     while (true) {
       const i = await UI.menu([
         { label: '☠ Criaturas' }, { label: '📖 Bestiario' }, { label: '⚱ Mochila' }, { label: '⚰ Osario (caja)' },
-        { label: '💾 Guardar' }, { label: '⚙ Opciones' },
+        { label: '💾 Guardar' }, { label: '⚙ Opciones' }, { label: '☁ Nube y ranking' },
       ], { cls: 'pausemenu', title: `Monedas de hueso: ${this.money} · Sellados: ${this.dex.caught.size}/${SPECIES.length}`, cancelLabel: '✕ Cerrar' });
       if (i === -1) break;
       if (i === 0) await this.partyMenu({});
       if (i === 1) await this.dexScreen(false);
       if (i === 2) await this.bagMenu({});
       if (i === 3) await this.boxMenu();
-      if (i === 4) { this.save(); await UI.say('Partida guardada en las sombras.', { auto: 700 }); }
+      if (i === 4) { this.save(); await UI.say(Cloud.user ? 'Partida guardada en las sombras... y en la nube.' : 'Partida guardada en las sombras.', { auto: 700 }); }
       if (i === 5) await this.optionsMenu();
+      if (i === 6) await this.cloudMenu();
     }
     this.world.busy = false;
   },
@@ -521,17 +600,25 @@ const Game = {
   // ------------------------------------------------------------------
   //  GUARDADO
   // ------------------------------------------------------------------
-  save() {
-    const data = {
+  saveData() {
+    return {
       party: this.party, box: this.box, bag: this.bag, money: this.money, flags: this.flags,
       dex: { seen: [...this.dex.seen], caught: [...this.dex.caught] },
-      player: this.player, respawn: this.respawn, settings: this.settings,
+      player: this.player, respawn: this.respawn, settings: this.settings, savedAt: Date.now(),
     };
+  },
+  save() {
+    const data = this.saveData();
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) { console.warn(e); }
+    Cloud.saveSoon(data);
   },
   load() {
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { }
+    this.loadData(d);
+  },
+  loadData(d) {
     try {
-      const d = JSON.parse(localStorage.getItem(SAVE_KEY));
       const valid = c => c && SPECIES_BY_ID[c.sp];
       this.party = (d.party || []).filter(valid); this.box = (d.box || []).filter(valid);
       [...this.party, ...this.box].forEach(c => { c.moves = (c.moves || []).filter(m => MOVES[m]); refreshStats(c); c.hp = Math.min(c.hp, c.stats.hp); });

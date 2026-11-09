@@ -5,6 +5,12 @@ Hecho en HTML5 + JavaScript puro, sin dependencias: **abre `UMBRAL.html` (todo e
 
 Para regenerar `UMBRAL.html` después de cambios: `python3 tools/construir_html.py`.
 
+## App, nube y despliegue
+
+- **App instalable (PWA)**: se instala en el celular desde el navegador y funciona sin conexión.
+- **Guardado en la nube y ranking** con Supabase (correo o invitado).
+- **Publicación en Vercel**: ver [DESPLIEGUE.md](DESPLIEGUE.md).
+
 ## Características
 
 - **102 criaturas** de mitologías de todo el mundo (34 linajes × 3 etapas).
