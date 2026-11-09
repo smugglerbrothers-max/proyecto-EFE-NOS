@@ -19,9 +19,12 @@
  * silence clock:
  *
  *   1. ESCRITURAS en los archivos objetivo que el prompt nombró (mtime avanzó).
- *   2. PROCESO del hijo (`/proc/<pid>`): sigue vivo, y sus contadores de CPU
- *      (utime+stime) o de I/O (read_bytes+write_bytes) avanzaron desde el tick
- *      anterior. Esto NO depende de que el hijo coopere ni de que emita texto.
+ *   2. PROCESO del hijo (`/proc/<pid>`) — SÓLO para hijos fuera de proceso
+ *      (el antiguo puente `opencode acp`). Desde que ACP se retiró
+ *      (2026-10-01) los hijos son in-process y no tienen PID propio, así que
+ *      este canal está APAGADO por defecto: escanear `/proc` cada 15 s en el
+ *      hilo del orquestador no encontraba nunca nada. Se reactiva con
+ *      `DSH_JOB_WATCHDOG_PROCESS_DISCOVERY=1`.
  *   3. SALIDA del job: un `job_output` que trae texto. Un poll que responde
  *      "(no new output)" NO es evidencia de estancamiento: un hijo que está
  *      haciendo tool calls puede verse mudo por diseño.
@@ -255,7 +258,7 @@ function normalizePromptPath(value, cwd, bases) {
   return fallback
 }
 
-function extractTargetPaths(prompt, cwd) {
+export function extractTargetPaths(prompt, cwd) {
   const found = new Set()
   const bases = promptBaseDirs(prompt, cwd)
   for (const match of String(prompt || '').matchAll(TARGET_PATH_RE)) {
@@ -275,7 +278,7 @@ function extractTargetPaths(prompt, cwd) {
  * @param events - eventos de la sesión hija, en orden.
  * @returns el mensaje de error, o `undefined` si no hay ninguno.
  */
-function failureFromEvents(events) {
+export function failureFromEvents(events) {
   for (let index = events.length - 1; index >= 0; index -= 1) {
     const event = events[index]
     const data = event?.data
@@ -467,6 +470,7 @@ export function apply(ctx) {
   const maxRuntimeMs = envMs('DSH_JOB_WATCHDOG_MAX_RUNTIME_MS', DEFAULT_MAX_RUNTIME_MS)
   const pollIntervalMs = envMs('DSH_JOB_WATCHDOG_POLL_MS', DEFAULT_POLL_INTERVAL_MS)
   const fastFailMs = envMs('DSH_JOB_WATCHDOG_FAST_FAIL_MS', DEFAULT_FAST_FAIL_MS)
+  const processDiscovery = process.env.DSH_JOB_WATCHDOG_PROCESS_DISCOVERY === '1'
 
   /**
    * @type {Map<string, {owner: object, startedAt: number, paths: string[], lastFileMtime: number, label: string, tool: string, cwd: string, preflight: boolean, killing: boolean, pid?: number, sawProcess: boolean, cpuTicks?: number, ioBytes?: number, lastSignalAt: number, lastSignalKind: string, warnedAt?: number, childId?: string, childLookupAt?: number}>}
@@ -579,6 +583,7 @@ export function apply(ctx) {
       if (polled !== undefined && trimmed !== '' && !trimmed.startsWith('(no new output)')) {
         polled.lastSignalAt = Date.now()
         polled.lastSignalKind = 'salida del hijo'
+        polled.warnedAt = undefined
       }
     }
 
@@ -633,7 +638,7 @@ export function apply(ctx) {
     const silence = now - record.lastSignalAt
     const minutes = (ms) => `${Math.round(ms / 60000)} min`
     const procText = proc === undefined
-      ? 'proceso AUSENTE'
+      ? (record.sawProcess ? 'proceso AUSENTE' : 'hijo in-process (sin PID que observar)')
       : `proceso vivo pid ${record.pid} (estado ${proc.state}, CPU ${proc.cpuTicks} ticks, I/O ${record.ioBytes ?? '?'} bytes)`
     return `${procText}; última señal: ${record.lastSignalKind} hace ${minutes(silence)}; `
       + `${record.paths.length} archivos objetivo vigilados; job de ${minutes(now - record.startedAt)}`
@@ -749,7 +754,7 @@ export function apply(ctx) {
       `⚠ watchdog: ${jobId} ("${record.label}") lleva ${Math.round(silence / 60000)} min sin NINGUNA señal de vida.`,
       `Evidencia: ${evidence}.`,
       `NO lo maté: el umbral de kill es ${Math.round(killMs / 60000)} min de silencio total.`,
-      `Decidí vos: esperarlo con job_output({ job_id: "${jobId}", wait: true }) o cerrarlo con job_kill.`,
+      `Decidí vos: esperarlo con job_output({ job_id: "${jobId}", wait: true, timeout_ms: 120000 }) o cerrarlo con job_kill.`,
     ].join('\n')
     deliverNotice(record.owner, record.cwd, `aviso ${jobId} (${record.label}) — ${evidence}`, text)
   }
@@ -799,7 +804,7 @@ export function apply(ctx) {
         //    anterior. Esto no depende de que el hijo coopere.
         //    Se busca UNA sola vez: una vez visto el hijo, su desaparición es
         //    evidencia dura, y volver a buscar adoptaría el proceso de otro job.
-        if (record.pid === undefined && !record.sawProcess && now >= record.nextDiscoveryAt) {
+        if (processDiscovery && record.pid === undefined && !record.sawProcess && now >= record.nextDiscoveryAt) {
           record.nextDiscoveryAt = now + DISCOVERY_RETRY_MS
           const pid = await discoverChildPid(record, claimed)
           if (pid !== undefined) {
@@ -843,6 +848,8 @@ export function apply(ctx) {
         if (signal !== undefined) {
           record.lastSignalAt = now
           record.lastSignalKind = signal
+          // El hijo revivió: si después se vuelve a quedar mudo, merece otro aviso.
+          record.warnedAt = undefined
         }
 
         const age = now - record.startedAt

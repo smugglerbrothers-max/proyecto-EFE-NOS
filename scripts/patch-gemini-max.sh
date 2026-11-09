@@ -55,18 +55,28 @@ root, stamp = Path(sys.argv[1]), sys.argv[2]
 old = 'e.startsWith("gemma-4"));else{if(t.reasoning_effort===undefined&&t.reasoning===undefined&&t.thinking===undefined&&!(t.output_config&&typeof t.output_config==="object"&&t.output_config.effort!==undefined))t={...t,reasoning_effort:"max"};if(t.reasoning_effort){'
 new = 'e.startsWith("gemma-4"));else{t={...t,reasoning_effort:"max"};if(t.reasoning_effort){'
 already = 'e.startsWith("gemma-4"));else{t={...t,reasoning_effort:"max"};if(t.reasoning_effort){'
+import os
+expected = int(os.environ.get("EXPECTED_GEMINI_COPIES", "6"))
+# Two passes: count first, write only if the layout is the expected one, so a
+# changed bundle never ends up half-patched.
+todo = []
 patched = 0
 ready = 0
 for path in sorted(root.glob("*.js")):
     src = path.read_text(encoding="utf-8", errors="ignore")
     count = src.count(old)
     if count:
-        path.with_name(path.name + "." + stamp + ".bak").write_text(src, encoding="utf-8")
-        path.write_text(src.replace(old, new), encoding="utf-8")
+        todo.append((path, src))
         patched += count
     ready += src.count(already)
-if patched + ready != 6:
-    raise SystemExit(f"ERROR: expected 6 Gemini translator copies, found {patched} new + {ready} ready")
+if patched + ready != expected:
+    raise SystemExit(
+        f"ERROR: expected {expected} Gemini translator copies, found {patched} new + {ready} ready; "
+        "bundle left untouched (set EXPECTED_GEMINI_COPIES if the new layout is correct)"
+    )
+for path, src in todo:
+    path.with_name(path.name + "." + stamp + ".bak").write_text(src, encoding="utf-8")
+    path.write_text(src.replace(old, new), encoding="utf-8")
 print(f"bundle: {patched} patched, {ready} already ready")
 PY
 

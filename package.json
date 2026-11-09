@@ -1,0 +1,11 @@
+{
+  "name": "orquestador-preset",
+  "private": true,
+  "type": "module",
+  "description": "Preset Orquestador para DeepSeek Harness + combo OmniRoute",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "for f in orchestrator/*.js; do node --check \"$f\" || exit 1; done && for f in scripts/*.sh; do bash -n \"$f\" || exit 1; done"
+  }
+}

@@ -8,10 +8,16 @@
  * handles combo admission, while this file preserves the evidence needed to
  * understand the otherwise undocumented limits.
  *
+ * Quarantine policy: rate limits/quotas, unavailable models, timeouts, 5xx and
+ * empty 200s put the model in a 5 h cooldown. A plain 4xx (`request_error`) is
+ * logged but NOT quarantined: it is usually the request's fault (context too
+ * long, bad schema), and benching a healthy model for 5 h over it starves the
+ * combo for nothing.
+ *
  * @module omniroute-limit-observer
  */
 
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -22,18 +28,29 @@ const HOME = os.homedir()
 const DB_FILE = path.join(HOME, '.omniroute', 'storage.sqlite')
 const LOG_DIR = path.join(HOME, '.dsh', 'logs')
 const EVENT_LOG = path.join(LOG_DIR, 'omniroute-limit-events.jsonl')
+/** Rotate the event log past this size (one `.1` generation is kept). */
+const EVENT_LOG_MAX_BYTES = 5 * 1024 * 1024
 const STATE_FILE = path.join(HOME, '.dsh', '.agent-presets', 'orchestrator', '.omniroute-limit-state.json')
+const CONTROLLER_STATE_FILE = path.join(HOME, '.omniroute', 'quarantine-state.json')
 const COOLDOWN_MS = 5 * 60 * 60 * 1000
 const MAX_ROWS_PER_TICK = 500
+const POLL_MS = 15_000
 const TARGET_PROVIDERS = new Set(['openrouter', 'gemini', 'ocwrap'])
 const RELEVANT_TOOLS = new Set(['omniroute_code'])
-const STARTED_JOB_RE = /started background subagent job (subagent-\d+)/
-const CODE_MODELS = [
-  'openrouter:openrouter/nex-agi/nex-n2.5-pro:free',
-  'openrouter:cohere/north-mini-code:free',
-  'gemini:gemini/gemini-flash-lite-latest',
-  'ocwrap:ocwrap/big-pickle',
-  'ocwrap:ocwrap/longcat-2.5-preview-free',
+/** Reasons that do NOT bench a model (see module doc). */
+const NON_QUARANTINE_REASONS = new Set(['request_error'])
+
+/**
+ * The `code` combo, in priority order. MUST match `omniroute-code-combo.json`
+ * at the bundle root (a test enforces it). Only used to decide whether the
+ * whole combo is cooling down.
+ */
+export const CODE_COMBO = [
+  { model: 'ocwrap/big-pickle', providerId: 'ocwrap' },
+  { model: 'ocwrap/longcat-2.5-preview-free', providerId: 'ocwrap' },
+  { model: 'cohere/north-mini-code:free', providerId: 'openrouter' },
+  { model: 'nex-agi/nex-n2.5-pro:free', providerId: 'openrouter' },
+  { model: 'gemini/gemini-flash-lite-latest', providerId: 'gemini' },
 ]
 
 let DatabaseSync
@@ -67,7 +84,8 @@ function compact(value, max = 500) {
   return String(value ?? '').replace(/\s+/g, ' ').slice(0, max)
 }
 
-function classify(row) {
+/** @returns {string|null} failure class of one call_logs row, or null on success. */
+export function classify(row) {
   const status = Number(row.status) || 0
   const text = `${row.error_summary ?? ''} ${row.error_type ?? ''}`
   if (status === 429 || /rate.?limit|too many requests|quota|daily limit|free-models-per-day/i.test(text)) {
@@ -80,12 +98,58 @@ function classify(row) {
   return null
 }
 
-function providerOf(row) {
+export function providerOf(row) {
   const requested = String(row.requested_model ?? '').toLowerCase()
   if (requested.startsWith('ocwrap/')) return 'ocwrap'
   if (requested.startsWith('gemini/')) return 'gemini'
   if (requested.startsWith('openrouter/')) return 'openrouter'
   return String(row.provider ?? '').toLowerCase()
+}
+
+/**
+ * Canonical `provider:model` key. The ledgers in the wild mix spellings —
+ * `openrouter:openrouter/nex-agi/…`, `openrouter:cohere/…`, `ocwrap:ocwrap/big-pickle`,
+ * `ocwrap:big-pickle` — so every key is reduced to provider + model without a
+ * redundant `provider/` prefix before it is compared.
+ *
+ * @param {string} provider
+ * @param {string} model
+ */
+export function canonicalModelKey(provider, model) {
+  const p = String(provider ?? '').toLowerCase()
+  let m = String(model ?? '').toLowerCase()
+  if (p !== '' && m.startsWith(`${p}/`)) m = m.slice(p.length + 1)
+  return `${p}:${m}`
+}
+
+/** Canonicalize a stored ledger key (`provider:model`, model may contain `:`). */
+export function canonicalLedgerKey(key, entry) {
+  if (entry && typeof entry === 'object' && entry.provider && entry.model) {
+    return canonicalModelKey(entry.provider, entry.model)
+  }
+  const raw = String(key)
+  const colon = raw.indexOf(':')
+  const slash = raw.indexOf('/')
+  // `provider:` prefix only when the first ':' comes before any '/'.
+  if (colon > 0 && (slash < 0 || colon < slash)) {
+    return canonicalModelKey(raw.slice(0, colon), raw.slice(colon + 1))
+  }
+  return canonicalModelKey('', raw)
+}
+
+/**
+ * True when every model of the combo has an active cooldown in any of the
+ * given ledgers (`{ [key]: { cooldownUntil } }`).
+ */
+export function comboFullyCooling(ledgers, now, combo = CODE_COMBO) {
+  const cooling = new Set()
+  for (const ledger of ledgers) {
+    if (!ledger || typeof ledger !== 'object') continue
+    for (const [key, entry] of Object.entries(ledger)) {
+      if (Number(entry?.cooldownUntil) > now) cooling.add(canonicalLedgerKey(key, entry))
+    }
+  }
+  return combo.every(({ model, providerId }) => cooling.has(canonicalModelKey(providerId, model)))
 }
 
 function qualityFailure(row) {
@@ -127,15 +191,20 @@ function ensureState(state) {
 /** @param {object} ctx */
 export function apply(ctx) {
   const state = ensureState(readJson(STATE_FILE, {}))
-  const jobs = new Map()
   const guarded = new WeakSet()
   let collecting = false
   let warnedNoSqlite = false
+  let dirty = true
 
   function persist() {
+    if (!dirty) return
     try {
       mkdirSync(path.dirname(STATE_FILE), { recursive: true })
-      writeFileSync(STATE_FILE, `${JSON.stringify(state, null, 2)}\n`)
+      // Atomic replace: a crash mid-write must not leave a truncated ledger.
+      const tmp = `${STATE_FILE}.${process.pid}.tmp`
+      writeFileSync(tmp, `${JSON.stringify(state, null, 2)}\n`)
+      renameSync(tmp, STATE_FILE)
+      dirty = false
     } catch (error) {
       ctx.logger?.warn?.(`omniroute-limit-observer: no pude guardar estado: ${error.message}`)
     }
@@ -144,6 +213,11 @@ export function apply(ctx) {
   function event(entry) {
     try {
       mkdirSync(LOG_DIR, { recursive: true })
+      try {
+        if (statSync(EVENT_LOG).size > EVENT_LOG_MAX_BYTES) renameSync(EVENT_LOG, `${EVENT_LOG}.1`)
+      } catch {
+        // No log yet.
+      }
       appendFileSync(EVENT_LOG, `${JSON.stringify({ at: new Date().toISOString(), ...entry })}\n`)
     } catch (error) {
       ctx.logger?.warn?.(`omniroute-limit-observer: no pude guardar log: ${error.message}`)
@@ -153,7 +227,7 @@ export function apply(ctx) {
   function quarantine(row, reason) {
     const provider = providerOf(row) || 'unknown'
     const model = String(row.model ?? row.requested_model ?? 'unknown')
-    const key = `${provider}:${model}`
+    const key = canonicalModelKey(provider, model)
     const now = Date.now()
     const previous = state.models[key]
     const active = previous && Number(previous.cooldownUntil) > now
@@ -168,6 +242,7 @@ export function apply(ctx) {
       cooldownUntil,
       cooldownUntilIso: new Date(cooldownUntil).toISOString(),
     }
+    dirty = true
     event({
       action: active ? 'error_during_cooldown' : 'quarantine',
       provider,
@@ -196,6 +271,14 @@ export function apply(ctx) {
     let db
     try {
       db = new DatabaseSync(DB_FILE, { readOnly: true })
+      // The DB may have been recreated (reinstall, manual cleanup): rowids
+      // restart, and a stale high-water mark would hide every new row forever.
+      const maxRowid = Number(db.prepare('SELECT MAX(rowid) AS m FROM call_logs').get()?.m ?? 0)
+      if (maxRowid < state.lastRowid) {
+        event({ action: 'rowid_reset', previous: state.lastRowid, current: maxRowid })
+        state.lastRowid = 0
+        dirty = true
+      }
       const rows = db.prepare(`
         SELECT rowid, timestamp, status, model, requested_model, provider,
                combo_name, error_summary, error_type, correlation_id,
@@ -208,9 +291,11 @@ export function apply(ctx) {
       `).all(state.lastRowid)
       for (const row of rows) {
         state.lastRowid = Number(row.rowid)
+        dirty = true
         if (!isRelevant(row)) continue
         const reason = classify(row) ?? qualityFailure(row)
-        const entry = {
+        const benched = reason !== null && !NON_QUARANTINE_REASONS.has(reason)
+        event({
           action: reason ? 'observed_error' : 'success',
           timestamp: row.timestamp ?? null,
           provider: providerOf(row),
@@ -219,15 +304,15 @@ export function apply(ctx) {
           combo: row.combo_name ?? null,
           status: row.status ?? null,
           reason,
+          quarantined: benched,
           durationMs: row.duration ?? null,
           tokensIn: row.tokens_in ?? null,
           tokensOut: row.tokens_out ?? null,
           tokensReasoning: row.tokens_reasoning ?? null,
           correlationId: row.correlation_id ?? null,
           error: compact(row.error_summary),
-        }
-        event(entry)
-        if (reason) quarantine(row, reason)
+        })
+        if (benched) quarantine(row, reason)
       }
       persist()
     } catch (error) {
@@ -240,22 +325,18 @@ export function apply(ctx) {
     }
   }
 
-  function activeQuarantine() {
-    const controllerState = readJson(path.join(HOME, '.omniroute', 'quarantine-state.json'), {})
-    return controllerState.models && typeof controllerState.models === 'object' ? controllerState.models : {}
-  }
-
   function guardAgent(agent) {
     if (!agent || guarded.has(agent)) return
     guarded.add(agent)
     try {
       agent.ctx.inject(['tools'], (scope) => {
         scope.tools.guard((execution) => {
-          const quarantines = activeQuarantine()
-          const now = Date.now()
-          if (execution.name === 'omniroute_code') {
-            const allCooling = CODE_MODELS.every((modelKey) => Number(quarantines[modelKey]?.cooldownUntil) > now)
-            if (allCooling) return 'Todos los modelos del combo code están en cuarentena. Espera a que venza una cuarentena de 5 horas; no fuerces reintentos.'
+          if (execution.name !== 'omniroute_code') return undefined
+          // Both ledgers count: the controller's (authoritative for admission)
+          // and ours (which the controller may not have caught up with yet).
+          const controller = readJson(CONTROLLER_STATE_FILE, {})?.models
+          if (comboFullyCooling([controller, state.models], Date.now())) {
+            return 'Todos los modelos del combo code están en cuarentena. Espera a que venza una cuarentena de 5 horas; no fuerces reintentos.'
           }
           return undefined
         })
@@ -265,16 +346,9 @@ export function apply(ctx) {
     }
   }
 
-  ctx.on?.('tools/result', (_call, result) => {
-    const text = resultText(result)
-    const tool = _call?.toolName ?? _call?.name
-    if (RELEVANT_TOOLS.has(tool)) {
-      const match = text.match(STARTED_JOB_RE)
-      if (match) jobs.set(match[1], { tool, at: Date.now() })
-      collect()
-      return
-    }
-    if (text.includes('subagent-')) collect()
+  ctx.on?.('tools/result', (call, result) => {
+    const tool = call?.toolName ?? call?.name
+    if (RELEVANT_TOOLS.has(tool) || resultText(result).includes('subagent-')) collect()
   })
 
   ctx.on?.('agent/created', ({ agent }) => guardAgent(agent))
@@ -284,10 +358,15 @@ export function apply(ctx) {
     return next()
   })
 
-  // Catch calls that finish without a matching DSH tool result and give the
-  // observer a bounded polling cadence while a preset session is alive.
-  const timer = setInterval(collect, 15_000)
-  timer.unref?.()
+  // Bounded polling cadence while a preset session is alive. Registered as an
+  // effect when the host supports it, so a plugin reload does not leak timers.
+  const startTimer = () => {
+    const timer = setInterval(collect, POLL_MS)
+    timer.unref?.()
+    return () => clearInterval(timer)
+  }
+  if (typeof ctx.effect === 'function') ctx.effect(startTimer, 'omniroute-limit-observer: interval')
+  else startTimer()
   collect()
   persist()
 }

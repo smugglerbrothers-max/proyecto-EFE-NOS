@@ -76,12 +76,17 @@ const SHELL_MUTATION_PATTERNS = [
   /(^|[^>])>{1,2}\s*(?:\/(?!dev\/(?:null|stdout|stderr)|tmp\/)|\.{1,2}[\w.-]*\/|~\/)[^\s;|&<>]+/,
   /(^|[^>])>{1,2}\s*[\w.-]+\.(?:html?|md|json|jsonl|txt|py|sh|bash|js|mjs|cjs|ts|tsx|jsx|css|scss|ya?ml|toml|ini|cfg|conf)\b/,
   // A heredoc whose body opens a file for writing.
-  /<<[\s\S]*?(?:\.write_text\(|\.write_bytes\(|open\([^)]*['"][wa]b?['"])/,
+  /<<[\s\S]*?(?:\.write_text\(|\.write_bytes\(|open\([^)]*['"][wax]b?\+?['"])/,
+  // Inline interpreters that write (`python -c "open(...,'w')"`, `node -e "fs.writeFileSync(...)"`).
+  /\b(?:python3?|node|deno|bun)\s+(?:-[A-Za-z]*\s+)*-[ce]\b[\s\S]*?(?:\.write_text\(|\.write_bytes\(|open\([^)]*['"][wax]b?\+?['"]|writeFileSync|appendFileSync|rmSync|unlinkSync|renameSync|shutil\.|os\.remove|os\.unlink)/,
+  // `find ... -delete` and `find ... -exec rm|mv|cp` (rm is not at a command boundary there).
+  /\bfind\b[^;|&]*\s-(?:delete\b|exec(?:dir)?\s+(?:rm|mv|cp|chmod|chown|truncate)\b)/,
   // Mutating shell verbs, at a command boundary.
   /(?:^|[;&|]\s*|\b(?:sudo|doas|timeout\s+\d+|xargs)\s+)(?:rm|rmdir|mv|cp|mkdir|touch|truncate|dd|chmod|chown|ln|tee|install|patch)\b/,
   /\bsed\s+(?:-i|--in-place)\b/,
   /\bperl\s+-i\b/,
-  /\bgit\s+(?:add|commit|push|pull|reset|clean|checkout|restore|stash|merge|rebase|apply|rm|mv)\b/,
+  /\bgit\s+(?:-C\s+\S+\s+)?(?:add|commit|push|pull|reset|clean|checkout|switch|restore|stash|merge|rebase|apply|am|cherry-pick|revert|rm|mv|tag|worktree|submodule|init|clone)\b/,
+  /\bgit\s+(?:-C\s+\S+\s+)?branch\s+(?:-[dDmMcCf]\b|--(?:delete|move|copy|force)\b)/,
   /\b(?:npm|pnpm|yarn|bun)\s+(?:install|i|add|remove|uninstall|ci|link)\b/,
   /\b(?:pip|pip3|uv)\s+(?:install|add)\b/,
   /\b(?:apt|apt-get|dnf|yum|pacman|brew|snap)\s+(?:install|remove|upgrade|purge)\b/,
@@ -91,7 +96,7 @@ const SHELL_MUTATION_PATTERNS = [
  * @param {string} command - the raw shell command.
  * @returns {boolean} true when the command would produce or mutate files.
  */
-function isProducingShellCommand(command) {
+export function isProducingShellCommand(command) {
   return SHELL_MUTATION_PATTERNS.some((pattern) => pattern.test(command))
 }
 
@@ -104,7 +109,9 @@ export function blindWaitReason(execution) {
   if (execution?.name !== 'job_output') return undefined
   const args = execution.arguments
   if (args === null || typeof args !== 'object' || args.wait !== true) return undefined
-  const timeout = typeof args.timeout_ms === 'number' ? args.timeout_ms : 0
+  // Accept both spellings: the jobs tool uses `timeout_ms`, other DSH tools `timeoutMs`.
+  const raw = typeof args.timeout_ms === 'number' ? args.timeout_ms : args.timeoutMs
+  const timeout = typeof raw === 'number' ? raw : 0
   return timeout > MAX_JOB_WAIT_MS ? WAIT_DENY : undefined
 }
 
@@ -149,7 +156,7 @@ export function sensitiveDelegationReason(execution) {
  * @param agent - the agent to classify.
  * @returns whether the agent is a delegated child.
  */
-function isDelegatedChild(agent) {
+export function isDelegatedChild(agent) {
   const header = agent?.session?.header
   if (header === undefined || header === null) return false
   if (header.parentSession !== undefined) return true
@@ -163,7 +170,7 @@ function isDelegatedChild(agent) {
  * para dejar el Studio vivo, y cada intento abrió un diálogo de contraseña en
  * GNOME; algunos terminaron en units `root` tiradas en el sistema.
  */
-const FORBIDDEN_CHILD_VERBS = new Set(['sudo', 'doas', 'pkexec', 'su'])
+const FORBIDDEN_CHILD_VERBS = new Set(['sudo', 'doas', 'pkexec', 'su', 'run0'])
 /** Palabras que preceden al verbo real sin cambiarlo. */
 const VERB_PREFIXES = new Set(['nohup', 'setsid', 'env', 'command', 'exec'])
 const CHILD_ESCALATION_DENY =
@@ -178,12 +185,26 @@ const CHILD_ESCALATION_DENY =
  * @param command - la línea de shell.
  * @returns true cuando hay que negarla.
  */
-function isChildEscalation(command) {
-  for (const raw of String(command || '').split(/\n|;|\|\||&&|\|/)) {
+export function isChildEscalation(command) {
+  const text = String(command || '')
+  // Nested shells and command substitutions hide the real verb from the
+  // segment parser: `bash -c "sudo …"`, `$(sudo …)`, `` `pkexec …` ``.
+  for (const match of text.matchAll(/(?:\b(?:ba|z|da)?sh\s+-[A-Za-z]*c\s+(["'])([\s\S]*?)\1)|\$\(([^)]*)\)|`([^`]*)`/g)) {
+    const inner = match[2] ?? match[3] ?? match[4] ?? ''
+    if (inner !== text && isChildEscalation(inner)) return true
+  }
+  for (const raw of text.split(/\n|;|\|\||&&|\||\(|\)/)) {
     let words = raw.trim().split(/\s+/).filter((word) => word !== '')
     while (words.length > 0) {
       const head = words[0]
-      if (head === 'timeout') words = words.slice(2)
+      if (head === 'timeout') {
+        // `timeout [-s SIG] [-k DUR] [--foreground] DUR cmd...`: skip options, then the duration.
+        let index = 1
+        while (index < words.length && words[index].startsWith('-')) {
+          index += /^-[sk]$/.test(words[index]) ? 2 : 1
+        }
+        words = words.slice(index + 1)
+      }
       else if (VERB_PREFIXES.has(head) || /^[A-Za-z_][A-Za-z0-9_]*=/.test(head)) words = words.slice(1)
       else break
     }

@@ -12,8 +12,9 @@
 #      sesión y el MISMO workspace, con el modelo fijado por `agentOptions` al
 #      combo `code` del router local OmniRoute (127.0.0.1:20128, servicio
 #      systemd --user `omniroute.service`).
-#        - Sin `opencode acp`, sin spawn, sin OpenCode: no hay proceso hijo, no
-#          consume cuota de OpenCode ni de Copilot, y arranca en el acto.
+#        - Sin `opencode acp` ni spawn: no hay proceso hijo y arranca en el acto.
+#          No consume Copilot, pero los dos primeros carriles del combo SÍ
+#          consumen la cuota compartida de OpenCode/Zen (ver punto 7).
 #        - El failover entre modelos (OpenCode/Zen `big-pickle` ->
 #          `longcat-2.5` vía `ocwrap` -> OpenRouter Cohere ->
 #          `nex-n2.5-pro:free` -> Gemini Flash Lite) lo hace el ROUTER, por
@@ -57,7 +58,9 @@
 #      credencial `opencode-go` que el modelo del orquestador y que la ruta de
 #      subagentes (mismo sha256, 51 chars). Zen aplica el límite por WORKSPACE,
 #      no por modelo, así que delegar en masa por ese carril puede agotar la
-#      cuota del propio main. Por eso va último en el combo. Panel para
+#      cuota del propio main. Va PRIMERO en el combo a propósito (es el carril
+#      más capaz); si la cuota aprieta, el failover sigue por OpenRouter y
+#      Gemini, pero conviene bajar el ritmo de delegación. Panel para
 #      vigilarlo: `python3 ~/opencode-usage-widget/usage_widget.py --once`.
 #
 # ACP: RETIRADO (2026-10-01). El puente `opencode-acp-bridge.service` quedó
@@ -89,13 +92,13 @@
         * La política de razonamiento es provider-scoped: `max` sólo se inyecta cuando el combo ya resolvió Gemini; nunca se envía a OpenCode/OpenRouter.
       - REGLA DE COSTO: generar con `omniroute_code` es GRATIS, pero sus primeros carriles consumen la cuota compartida de OpenCode/Zen y sólo se llega a Gemini después de los fallos definidos por el combo. Usá primero los gates deterministas (contrato, geometría, movimiento) y verificá vos mismo la evidencia.
       - La delegación es in-process y comparte tu sesión y tu workspace; puede escribir cuando corresponda. La evaluación de calidad queda en el agente raíz mediante lecturas, diffs, tests y evidencia reproducible.
-      - El hijo in-process COMPARTE tu sesión y tu workspace, y SÍ puede escribir archivos: el read-only es sólo tuyo, por el guard del preset. No levanta ningún proceso, así que arranca en el acto y no consume cuota de OpenCode ni de Copilot.
+      - El hijo in-process COMPARTE tu sesión y tu workspace, y SÍ puede escribir archivos: el read-only es sólo tuyo, por el guard del preset. No levanta ningún proceso, así que arranca en el acto; no consume Copilot, pero sus dos primeros carriles (`ocwrap`) sí consumen tu misma cuota de OpenCode/Zen.
       - NO hagas preflight de disponibilidad ni reintentos manuales. OmniRoute pone el modelo que da su primer error en cuarentena por 5 horas; no vuelvas a tocarlo ni relances el mismo modelo durante ese periodo. Usá el siguiente escalón sano y reportá el error.
       - El router vive en `http://127.0.0.1:20128` (servicio `omniroute.service`, systemd --user). Su telemetría por proveedor/modelo queda en `~/.omniroute/storage.sqlite` y el detalle consolidado en `~/.dsh/logs/omniroute-limit-events.jsonl`; el ledger de cuarentenas está en `~/.dsh/.agent-presets/orchestrator/.omniroute-limit-state.json`.
       - El hijo NO ve esta conversación (sesión nueva, prompt propio). Pasale en el prompt todo lo que necesita: rutas absolutas, el formato o contrato esperado, y cómo verificar el resultado.
       - Lanzá en paralelo (`run_in_background: true`) los hijos independientes y recogelos con `job_list` / `job_output`; para cortar uno, `job_kill`. No hay `send_message` para corregir a un hijo en vuelo: si falla o no alcanza, lanzá uno nuevo con el contexto corregido.
       - Límite práctico del router: 60 requests/min, 6 concurrentes, 350 ms entre requests. Lanzá en LOTES de 2-3 y recogé cada lote antes de lanzar el siguiente. Si ves "background job limit reached", paraste de recoger, no de tener razón.
-      - ESPERAS CORTAS (medido: 66-73 % del reloj se iba en esperas): cada `job_output` con espera, MÁXIMO ~120 s por llamada. Entre espera y espera hacé trabajo útil (lecturas de orientación, preparar el próximo lote, revisar evidencia ya disponible). PROHIBIDO encadenar esperas ciegas de 600 s sobre el mismo job: si en 3 rondas no hay señales de vida reales (escrituras o salida nueva), es `job_kill` + relanzar troceado, no otra espera.
+      - ESPERAS CORTAS (medido: 66-73 % del reloj se iba en esperas): cada `job_output` con espera, MÁXIMO 120 s por llamada; pasá siempre `timeout_ms` explícito (<= 120000), el guard rechaza esperas más largas. Entre espera y espera hacé trabajo útil (lecturas de orientación, preparar el próximo lote, revisar evidencia ya disponible). PROHIBIDO encadenar esperas ciegas de 600 s sobre el mismo job: si en 3 rondas no hay señales de vida reales (escrituras o salida nueva), es `job_kill` + relanzar troceado, no otra espera.
       - CONTRATO DEL HIJO: cada prompt nombra archivos objetivo exactos, un solo resultado verificable y el comando de comprobación concreto con `timeoutMs <= 180000`. No digas solamente "corré los tests" y nunca uses `npm test` completo salvo que vaya en background: preferí la prueba mínima del archivo tocado.
       - Si el hijo falla (error del proveedor, job en error/aborted, o salida insuficiente), ANTES de relanzar revisá el diff, mtime y artefactos parciales. Relanzá sólo la parte faltante con el fallo y la evidencia agregados al prompt. Máximo dos relanzamientos por tarea: en el tercero detenete y reportá el bloqueo con la evidencia; no repitas el mismo brief.
       - Una respuesta vacía, sin archivos tocados o sin evidencia de verificación NO cuenta como éxito aunque el router devuelva 200. Como el failover es del router, no hay "otro nivel" al que bajar: si el combo entero está caído, reportá el bloqueo con la evidencia.
@@ -122,7 +125,7 @@
       - Si te encontrás escribiendo un script Python largo o una cadena de greps/análisis en bash, pará: eso es trabajo pesado y va delegado. Tu shell es para verificar resultados y conseguir evidencia, no para resolver el problema vos.
       - No uses `write` ni `edit` directamente. Si un hijo deja un defecto, lanzá un hijo nuevo con la corrección exacta; no lo arregles vos.
       - SESIÓN LARGA (medido: una maratón de 400M tokens quema más que todos los mains juntos; el costo por paso crece porque cada paso re-lee la historia entera): si llevás 3+ rondas de verificación sobre el mismo entregable sin avance real, PARÁ de delegar más de lo mismo. Pedile a un hijo que deje el estado en un archivo (`ESTADO.md`: qué está hecho con evidencia, qué falta, qué se intentó y por qué falló) y decile al usuario que conviene seguir en una sesión nueva con ese archivo como punto de partida. No intentes "terminarlo a toda costa" dentro de una sesión agotada.
-      - Flujo obligatorio: (1) descomponer el objetivo; (2) delegar cada parte pesada con prompt autocontenido y criterio de verificación; (4) mientras corren, orientarte con lecturas read-only; (5) al volver, analizar y comparar resultados/evidencia; (6) integrar los aportes coordinando un pase de integración delegado; (7) verificar el resultado integrado; (8) repetir hasta que el entregable cumpla; (9) sintetizar.
+      - Flujo obligatorio: (1) descomponer el objetivo; (2) delegar cada parte pesada con prompt autocontenido y criterio de verificación; (3) mientras corren, orientarte con lecturas read-only; (4) al volver, analizar y comparar resultados/evidencia; (5) integrar los aportes coordinando un pase de integración delegado; (6) verificar el resultado integrado; (7) repetir hasta que el entregable cumpla; (8) sintetizar.
       - Checklist de calidad e integridad antes de aceptar un hijo:
         * ¿Cumple el objetivo y el contrato pedido, no solo "parece andar"?
         * ¿Está completo, sin TODOs, placeholders ni partes sin conectar?
@@ -172,9 +175,9 @@
 # Read-only preserves orientation and verification while closing every local
 # write path, so production can only happen in the delegated children.
 #
-# Note the asymmetry: the in-process children
-# (subagent/fork/workflow/ralph) INHERIT this composition and share this shell,
-# but the read-only policy plugin hands them back a writable mode; there are no
+# Note the asymmetry: the in-process child (`omniroute_code`, the only
+# delegation tool mounted here) INHERITS this composition and shares this shell,
+# but the read-only policy plugin hands it back a writable mode; there are no
 # out-of-process children left in this preset (ACP was retired 2026-10-01).
 - id: tool-bash
   name: '@deepseek-ai/dsh-tool-bash'
