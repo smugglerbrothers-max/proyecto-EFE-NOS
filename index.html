@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#05020a">
+<meta name="description" content="Captura, entrena y evoluciona 102 criaturas mitológicas de horror.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="UMBRAL">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>UMBRAL — Bestiario de las Sombras</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game" width="960" height="640"></canvas>
+    <div id="ui"></div>
+  </div>
+  <div id="touch">
+    <div class="dpad">
+      <button data-act="up" class="up">▲</button>
+      <button data-act="left" class="left">◀</button>
+      <button data-act="right" class="right">▶</button>
+      <button data-act="down" class="down">▼</button>
+    </div>
+    <div class="abtns">
+      <button data-act="menu" class="m">☰</button>
+      <button data-act="back" class="b">B</button>
+      <button data-act="ok" class="a">A</button>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js" crossorigin="anonymous"></script>
+  <script src="js/config.js"></script>
+  <script src="js/cloud.js"></script>
+  <script src="assets/criaturas/sprites.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/creature.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/battle.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    function fit() {
+      const touch = matchMedia('(pointer: coarse)').matches;
+      document.body.classList.toggle('touch', touch);
+      const availH = innerHeight - (touch ? 190 : 0);
+      const s = Math.min(innerWidth / 960, availH / 640);
+      document.getElementById('stage').style.setProperty('--s', s);
+    }
+    addEventListener('resize', fit); fit();
+    // App instalable: registrar el service worker (solo en https / localhost)
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+      addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>

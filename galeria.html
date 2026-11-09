@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><title>UMBRAL — Galería de criaturas</title>
+<style>body{background:#0c0910;color:#ddd;font-family:Georgia,serif;margin:0;padding:16px}
+h1{color:#c33;letter-spacing:4px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.c{background:#17121c;border:1px solid #2a2030;border-radius:8px;padding:6px;text-align:center}
+.c canvas{width:200px;height:170px}.n{font-weight:bold}.ty{font-size:12px;opacity:.8}</style></head>
+<body><h1>UMBRAL · Bestiario completo</h1><div class="grid" id="g"></div>
+<script src="assets/criaturas/sprites.js"></script><script src="js/data.js"></script><script src="js/art.js"></script>
+<script>
+const g=document.getElementById('g');const cells=[];
+for(const sp of SPECIES){const d=document.createElement('div');d.className='c';
+const cv=document.createElement('canvas');cv.width=200;cv.height=170;d.appendChild(cv);
+d.insertAdjacentHTML('beforeend',`<div class="n">#${String(sp.num).padStart(3,'0')} ${sp.name}</div><div class="ty">${sp.types.map(t=>TYPES[t].name).join(' / ')} · ${sp.origin} · Etapa ${sp.stage}</div>`);
+g.appendChild(d);cells.push([cv,sp]);}
+function loop(ts){const t=ts/1000;for(const [cv,sp] of cells){const r=cv.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)continue;
+const c=cv.getContext('2d');c.clearRect(0,0,200,170);Art.draw(c,sp,100,160,130,t+sp.num);}requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+</script></body></html>
