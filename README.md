@@ -36,14 +36,21 @@ Hecho en HTML5 + JavaScript puro, sin dependencias: **abre `index.html` en el na
 - `js/world.js` — mapa, zonas, personajes.
 - `js/main.js` — escenas, menús, evolución, guardado.
 
-## Usar imágenes propias para las criaturas
+## Ilustraciones de las criaturas
 
-Cada criatura se dibuja por código. Para reemplazar una por una ilustración:
+Las criaturas pueden mostrarse como **ilustraciones** (estilo fakemon/anime de horror) o con el dibujo procedural animado de respaldo.
+Ya están ilustradas 7: Chispín, Ifrit, Sultán Ifrit, Ahuizín, Ahuizotl, Ortro y Gashadokuro.
 
-1. Guarda un PNG con fondo transparente, mirando a la **derecha**, en `assets/criaturas/<id>.png` (ejemplo: `assets/criaturas/cerbero_3.png`).
-2. Agrega el id a la lista en `assets/criaturas/sprites.js`.
+Para agregar más:
 
-Los ids tienen la forma `linaje_etapa` (por ejemplo `chupacabra_1`, `chupacabra_2`, `chupacabra_3`).
+1. En `assets/criaturas/PROMPTS.md` hay un prompt listo para cada una de las 102 criaturas. Genera la imagen con fondo blanco en cualquier generador de imágenes.
+2. Quita el fondo y guárdala con su id:
+   `python3 tools/quitar_fondo.py cerbero_3 ruta/a/la/imagen.png`
+3. Empaqueta las imágenes para el juego:
+   `python3 tools/empaquetar_sprites.py`
+4. (Opcional) Actualiza la lista de hechas: `python3 tools/prompts_criaturas.py`
+
+Los scripts requieren Python 3 con Pillow (`pip install pillow`).
 
 ## Las 102 criaturas
 
