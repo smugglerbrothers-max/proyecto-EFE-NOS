@@ -939,7 +939,7 @@ const Art = (() => {
     const img = getImage(sp.id);
     C = b;
     if (img) {
-      const ih = 92, iw = Math.min(ih * img.width / img.height, 120), ihh = iw * img.height / img.width;
+      const ih = 100, iw = Math.min(ih * img.width / img.height, 125), ihh = iw * img.height / img.width;
       b.drawImage(img, -iw / 2, -ihh, iw, ihh);
     } else {
       const R = seeded(sp.id)() * 10;

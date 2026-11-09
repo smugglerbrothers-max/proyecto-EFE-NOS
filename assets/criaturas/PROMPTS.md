@@ -8,7 +8,7 @@ python3 tools/quitar_fondo.py <id> <imagen>
 python3 tools/empaquetar_sprites.py
 ```
 
-Hechas: 7 / 102 (marcadas con ✅).
+Hechas: 32 / 102 (marcadas con ✅).
 
 ### ✅ #001 Chispín — id `ifrit_1`
 
@@ -40,43 +40,43 @@ Criatura: "Ahuizín", cachorro de perro de agua azteca negro azulado con una man
 Criatura: "Ahuizotl", perro de agua azteca negro azulado y escamoso, mano humana con garras al final de la cola, púas azules, chorreando agua, mitología Azteca, tipo Abismo, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #006 Ahuizotl Tlaloque — id `ahuizotl_3`
+### ✅ #006 Ahuizotl Tlaloque — id `ahuizotl_3`
 
 ```
 Criatura: "Ahuizotl Tlaloque", bestia acuática azteca enorme con armadura de jade y piedra con glifos aztecas, mano gigante con garras en la cola, olas y lluvia, mitología Azteca, tipo Abismo, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #007 Basilisquín — id `basilisco_1`
+### ✅ #007 Basilisquín — id `basilisco_1`
 
 ```
 Criatura: "Basilisquín", serpiente bebé verde tóxica con una pequeña cresta de hueso en forma de corona y ojos amarillos, mitología Europa, tipo Plaga, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #008 Régulo — id `basilisco_2`
+### ✅ #008 Régulo — id `basilisco_2`
 
 ```
 Criatura: "Régulo", serpiente-lagarto verde venenosa con corona de hueso, púas en el lomo y baba tóxica verde brillante, mitología Europa, tipo Plaga, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #009 Basilisco — id `basilisco_3`
+### ✅ #009 Basilisco — id `basilisco_3`
 
 ```
 Criatura: "Basilisco", rey serpiente gigante de escamas verde oscuro acorazadas, gran corona de hueso, ojos amarillos petrificantes, gas venenoso, mitología Europa, tipo Plaga, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #010 Chupín — id `chupacabra_1`
+### ✅ #010 Chupín — id `chupacabra_1`
 
 ```
 Criatura: "Chupín", cría de chupacabra: reptil gris verdoso flaco con púas en el lomo y enormes ojos rojos, mitología Puerto Rico / México, tipo Sangre / Bestia, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #011 Chupacabra — id `chupacabra_2`
+### ✅ #011 Chupacabra — id `chupacabra_2`
 
 ```
 Criatura: "Chupacabra", chupacabra bípedo de piel gris verdosa, costillas marcadas, púas dorsales, colmillos huecos, ojos rojos, garras largas, mitología Puerto Rico / México, tipo Sangre / Bestia, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #012 Desangrador — id `chupacabra_3`
+### ✅ #012 Desangrador — id `chupacabra_3`
 
 ```
 Criatura: "Desangrador", chupacabra gigante acorazado con enormes púas de hueso en el lomo, mandíbula de colmillos huecos manchados de sangre, ojos rojos, mitología Puerto Rico / México, tipo Sangre / Bestia, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
@@ -334,22 +334,22 @@ Criatura: "Rahab", serpiente marina con aletas, púas y escamas azules, mitolog�
 Criatura: "Leviatán", serpiente marina colosal con escamas acorazadas, púas, aletas, olas y rayos, mitología Hebrea, tipo Abismo / Tormenta, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #055 Sollozo — id `banshee_1`
+### ✅ #055 Sollozo — id `banshee_1`
 
 ```
-Criatura: "Sollozo", pequeño espíritu de niña pálida flotando, cabello blanco, mitología Irlanda, tipo Espectro / Locura, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
+Criatura: "Sollozo", pequeño espectro encapuchado morado con ojos violetas y fuego violeta, mitología Irlanda, tipo Espectro / Locura, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #056 Bean Sídhe — id `banshee_2`
+### ✅ #056 Bean Sídhe — id `banshee_2`
 
 ```
-Criatura: "Bean Sídhe", banshee irlandesa: espíritu de mujer flotante con harapos grises, cabello blanco largo, boca abierta gritando, ojos rojos, mitología Irlanda, tipo Espectro / Locura, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
+Criatura: "Bean Sídhe", parca espectral con capucha, rostro de calavera, harapos morados, cadenas y fuego violeta, mitología Irlanda, tipo Espectro / Locura, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #057 Banshee Plañidera — id `banshee_3`
+### ✅ #057 Banshee Plañidera — id `banshee_3`
 
 ```
-Criatura: "Banshee Plañidera", banshee gigante con harapos, ondas de grito espectral y manos largas esqueléticas, mitología Irlanda, tipo Espectro / Locura, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
+Criatura: "Banshee Plañidera", parca reina con corona, harapos morados, muchas cadenas y fuego violeta, mitología Irlanda, tipo Espectro / Locura, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
 ### ⬜ #058 Moroi — id `strigoi_1`
@@ -388,22 +388,22 @@ Criatura: "Osario", esqueleto mediano hecho de muchos huesos unidos con llamas c
 Criatura: "Gashadokuro", esqueleto gigante japonés con fuego fantasmal cian en las cuencas, brazos largos con garras de hueso, mitología Japón, tipo Hueso / Espectro, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #064 Silbín — id `tunche_1`
+### ✅ #064 Silbín — id `tunche_1`
 
 ```
-Criatura: "Silbín", pequeño espíritu de la selva: sombra verde con ojos blancos, mitología Amazonía, tipo Espectro / Sombra, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
+Criatura: "Silbín", pequeño espíritu de madera con hojas en la cabeza y ojos verdes, mitología Amazonía, tipo Plaga / Espectro, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #065 Tunche — id `tunche_2`
+### ✅ #065 Tunche — id `tunche_2`
 
 ```
-Criatura: "Tunche", espíritu de la selva amazónica: figura sombría encapuchada de hojas y raíces, ojos blancos brillantes, mitología Amazonía, tipo Espectro / Sombra, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
+Criatura: "Tunche", espíritu de la selva amazónica: figura sombría encapuchada de hojas y raíces, ojos blancos brillantes, mitología Amazonía, tipo Plaga / Espectro, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #066 Tunche del Monte — id `tunche_3`
+### ✅ #066 Tunche del Monte — id `tunche_3`
 
 ```
-Criatura: "Tunche del Monte", espíritu gigante de la selva con cuerpo de raíces y hojas oscuras y máscara de calavera de madera, mitología Amazonía, tipo Espectro / Sombra, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
+Criatura: "Tunche del Monte", espíritu gigante de la selva con cuerpo de raíces y hojas oscuras y máscara de calavera de madera, mitología Amazonía, tipo Plaga / Espectro, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
 ### ⬜ #067 Cuellín — id `rokurokubi_1`
@@ -442,55 +442,55 @@ Criatura: "Manananggal", manananggal filipina: torso de mujer con alas de murci�
 Criatura: "Aswang", monstruo filipino cambiaformas gigante con alas de murciélago y lengua de probóscide, mitología Filipinas, tipo Sangre / Espectro, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #073 Duermevela — id `mara_1`
+### ✅ #073 Duermevela — id `mara_1`
 
 ```
 Criatura: "Duermevela", mancha de sombra con varios ojos rosados, mitología Germánico, tipo Locura / Sombra, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #074 Pesadilla — id `mara_2`
+### ✅ #074 Pesadilla — id `mara_2`
 
 ```
 Criatura: "Pesadilla", masa de sombra morada con muchos ojos y bocas, manos saliendo de ella, mitología Germánico, tipo Locura / Sombra, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #075 Mara — id `mara_3`
+### ✅ #075 Mara — id `mara_3`
 
 ```
 Criatura: "Mara", demonio de la pesadilla gigante, cuerpo de sombra con cientos de ojos rosados y bocas, mitología Germánico, tipo Locura / Sombra, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #076 Astilla — id `wendigo_1`
+### ✅ #076 Astilla — id `wendigo_1`
 
 ```
-Criatura: "Astilla", cervatillo esquelético con cráneo de ciervo por cara, mitología Algonquino, tipo Bestia / Hueso, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
+Criatura: "Astilla", cría de yeti de pelaje blanco y piel azul con cuernitos, mitología Algonquino, tipo Bestia / Hueso, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #077 Wendigo — id `wendigo_2`
+### ✅ #077 Wendigo — id `wendigo_2`
 
 ```
 Criatura: "Wendigo", wendigo alto y esquelético con cráneo de ciervo con astas y piel gris pegada a las costillas, mitología Algonquino, tipo Bestia / Hueso, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #078 Wíndigo Voraz — id `wendigo_3`
+### ✅ #078 Wíndigo Voraz — id `wendigo_3`
 
 ```
 Criatura: "Wíndigo Voraz", wendigo gigante con astas enormes, hielo y garras larguísimas, mitología Algonquino, tipo Bestia / Hueso, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #079 Serpelina — id `gorgona_1`
+### ✅ #079 Serpelina — id `gorgona_1`
 
 ```
 Criatura: "Serpelina", pequeña gorgona: niña-serpiente verde con cabello de gusanos, mitología Grecia, tipo Plaga / Locura, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #080 Gorgónide — id `gorgona_2`
+### ✅ #080 Gorgónide — id `gorgona_2`
 
 ```
 Criatura: "Gorgónide", gorgona: torso de mujer verde con cabello de serpientes vivas, cola de serpiente, ojos amarillos, mitología Grecia, tipo Plaga / Locura, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #081 Euríale — id `gorgona_3`
+### ✅ #081 Euríale — id `gorgona_3`
 
 ```
 Criatura: "Euríale", reina gorgona con armadura griega de bronce, cabello de serpientes y alas doradas, mitología Grecia, tipo Plaga / Locura, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
@@ -586,19 +586,19 @@ Criatura: "Ortro", perro infernal de DOS cabezas con melena de fuego, armadura d
 Criatura: "Cerbero", Cerbero gigante de TRES cabezas con armadura de hueso, lava, fuego y cadenas, mitología Grecia, tipo Infierno / Bestia, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #097 Becerro — id `moloch_1`
+### ✅ #097 Becerro — id `moloch_1`
 
 ```
-Criatura: "Becerro", becerro de bronce con ojos de fuego, mitología Canaán, tipo Infierno / Hueso, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
+Criatura: "Becerro", pequeño gólem de roca volcánica con un ojo de magma, mitología Canaán, tipo Infierno / Hueso, etapa 1 de 3: forma bebé pequeña tipo chibi, tierna pero inquietante. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #098 Molok — id `moloch_2`
+### ✅ #098 Molok — id `moloch_2`
 
 ```
 Criatura: "Molok", demonio con cabeza de toro y cuerpo de bronce con un horno ardiente en el vientre, mitología Canaán, tipo Infierno / Hueso, etapa 2 de 3: forma juvenil más grande y agresiva, con algo de armadura. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
 ```
 
-### ⬜ #099 Moloch — id `moloch_3`
+### ✅ #099 Moloch — id `moloch_3`
 
 ```
 Criatura: "Moloch", dios demonio toro colosal de bronce y lava con horno ardiente en el pecho y cuernos enormes, mitología Canaán, tipo Infierno / Hueso, etapa 3 de 3: forma final enorme e imponente, muy acorazada, con aura de poder. Estilo: ilustración de monstruo estilo fakemon/anime de alta calidad, contornos negros gruesos tipo cómic, colores intensos, aspecto de horror. Cuerpo completo, vista 3/4 mirando hacia la DERECHA, fondo blanco liso, sin texto.
