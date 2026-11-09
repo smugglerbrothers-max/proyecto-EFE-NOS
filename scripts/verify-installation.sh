@@ -7,7 +7,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEST="${DSH_PRESET_DIR:-$HOME/.dsh/.agent-presets/orchestrator}"
 ROUTER="${OMNIROUTE_URL:-http://127.0.0.1:20128}"
-FILES=(agent.cordis.yml preset.yml orchestrator-readonly-policy-v2.js orchestrator-job-watchdog.js omniroute-limit-observer.js)
+FILES=(agent.cordis.yml preset.yml orchestrator-readonly-policy-v2.js orchestrator-job-watchdog.js omniroute-limit-observer.js bin/quarantine-controller.mjs)
 fail=0
 ok()   { echo "  OK   $*"; }
 bad()  { echo "  FAIL $*"; fail=1; }
@@ -55,7 +55,8 @@ for file in "${FILES[@]}"; do
   elif ! cmp -s "$DEST/$file" "$ROOT/orchestrator/$file"; then warn "$file installed differs from repo (re-run scripts/install.sh)"
   else ok "$file"; fi
 done
-grep -qs 'omniroute:' "$HOME/.dsh/settings.yaml" && ok "provider omniroute in ~/.dsh/settings.yaml" || bad "merge omniroute-settings.example.yaml into ~/.dsh/settings.yaml"
+grep -qsE '^\s{2,}omniroute:\s*$' "$HOME/.dsh/settings.yaml" && ok "provider omniroute in ~/.dsh/settings.yaml" || bad "provider omniroute missing (python3 scripts/merge-settings.py)"
+systemctl --user is-active --quiet orquestador-quarantine.timer && ok "orquestador-quarantine.timer active" || warn "quarantine timer inactive: cooldowns are logged but not applied to the combo (bash scripts/install.sh)"
 
 echo
 [[ $fail == 0 ]] && echo "READY: select the 'Orquestador' preset and start a NEW session." || echo "NOT READY: fix the FAIL lines above."

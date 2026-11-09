@@ -6,6 +6,6 @@
   "engines": { "node": ">=22.13" },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "check": "for f in orchestrator/*.js; do node --check \"$f\" || exit 1; done && for f in scripts/*.sh; do bash -n \"$f\" || exit 1; done"
+    "check": "for f in orchestrator/*.js orchestrator/bin/*.mjs; do node --check \"$f\" || exit 1; done && for f in scripts/*.sh; do bash -n \"$f\" || exit 1; done"
   }
 }

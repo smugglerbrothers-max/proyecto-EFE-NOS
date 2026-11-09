@@ -1,0 +1,22 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: npm run -s check
+      - name: Tests
+        run: npm test
+      - name: ShellCheck
+        run: shellcheck -S warning scripts/*.sh
+      - name: Combo JSON / settings YAML parse
+        run: |
+          python3 -c "import json; json.load(open('omniroute-code-combo.json'))"
+          python3 -c "import yaml; yaml.safe_load(open('omniroute-settings.example.yaml'))"

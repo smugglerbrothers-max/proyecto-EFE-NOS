@@ -1,0 +1,11 @@
+[Unit]
+Description=Orquestador: revisa la cuarentena de modelos cada minuto
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+AccuracySec=15s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

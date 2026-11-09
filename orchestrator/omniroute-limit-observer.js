@@ -30,9 +30,9 @@ const LOG_DIR = path.join(HOME, '.dsh', 'logs')
 const EVENT_LOG = path.join(LOG_DIR, 'omniroute-limit-events.jsonl')
 /** Rotate the event log past this size (one `.1` generation is kept). */
 const EVENT_LOG_MAX_BYTES = 5 * 1024 * 1024
-const STATE_FILE = path.join(HOME, '.dsh', '.agent-presets', 'orchestrator', '.omniroute-limit-state.json')
-const CONTROLLER_STATE_FILE = path.join(HOME, '.omniroute', 'quarantine-state.json')
-const COOLDOWN_MS = 5 * 60 * 60 * 1000
+export const STATE_FILE = path.join(HOME, '.dsh', '.agent-presets', 'orchestrator', '.omniroute-limit-state.json')
+export const CONTROLLER_STATE_FILE = path.join(HOME, '.omniroute', 'quarantine-state.json')
+export const COOLDOWN_MS = 5 * 60 * 60 * 1000
 const MAX_ROWS_PER_TICK = 500
 const POLL_MS = 15_000
 const TARGET_PROVIDERS = new Set(['openrouter', 'gemini', 'ocwrap'])

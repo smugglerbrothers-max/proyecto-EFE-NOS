@@ -26,11 +26,17 @@ DeepSeek Harness — Orquestador (read-only, guard + watchdog + observer)
 | `orchestrator/orchestrator-readonly-policy-v2.js` | Fija read-only al raíz, niega escrituras/shell productivo, esperas ciegas, secretos en prompts y escaladas de privilegio en hijos. |
 | `orchestrator/orchestrator-job-watchdog.js` | Avisa (20 min) y mata (45 min de silencio total / 75 min de runtime) jobs sin señales de vida; rescata el motivo de los fallos de arranque. |
 | `orchestrator/omniroute-limit-observer.js` | Lee `call_logs` de OmniRoute, registra eventos y mantiene la cuarentena de 5 h por modelo. |
+| `orchestrator/bin/quarantine-controller.mjs` | **Controlador de cuarentena** (corre fuera de DSH, cada minuto): saca del combo `code` los modelos en cuarentena y los devuelve al vencer. Publica `~/.omniroute/quarantine-state.json`. |
+| `systemd/orquestador-quarantine.{service.in,timer}` | Timer `--user` del controlador (`install.sh` completa rutas de `node` y `omniroute`). |
 | `omniroute-code-combo.json` | **Fuente única** del combo `code` (la usan el script y, vía test, el observer). |
 | `omniroute-settings.example.yaml` | Fragmento para `~/.dsh/settings.yaml` (provider `omniroute`). |
 | `scripts/install.sh` | Instala el preset en `~/.dsh/.agent-presets/orchestrator/` con backup. |
 | `scripts/configure-code-combo.sh` | (Re)crea el combo `code` desde el JSON. `DRY_RUN=1` para ver sin tocar. |
 | `scripts/patch-gemini-max.sh` | Parchea OmniRoute para forzar `max` sólo en Gemini. Re-correr tras cada upgrade. |
+| `scripts/merge-settings.py` | Agrega el provider `omniroute` a `~/.dsh/settings.yaml` con backup; nunca reescribe claves existentes. |
+| `scripts/status.sh` | Panel: servicios, cuarentenas y qué modelo contestó en las últimas llamadas. |
+| `scripts/uninstall.sh` | Quita preset y timer (los mueve a backup). No toca OmniRoute ni settings. |
+| `omniroute.env.example` | Nombres de las variables privadas (vacías). Copiarlo **fuera** del repo. |
 | `scripts/verify-installation.sh` | Comprueba todo lo necesario y dice `READY` / `NOT READY`. |
 | `test/` | Tests `node:test` de los guards, el watchdog y el observer (`npm test`). |
 
@@ -43,12 +49,14 @@ in-process; OmniRoute global (`omniroute`) como `omniroute.service` de
 
 1. **Credenciales** (fuera del repo, en el entorno privado de cada servicio):
 
-   ```text
-   OPENCODE_API_KEY=<secreto local>     # ocwrap / Zen
-   OPENROUTER_API_KEY=<secreto local>
-   GOOGLE_API_KEY=<secreto local>       # Gemini
-   OMNIROUTE_API_KEY=<secreto local>    # lo lee DSH por apiKeyEnv
+   ```bash
+   install -D -m 600 omniroute.env.example ~/.config/omniroute/omniroute.env
+   $EDITOR ~/.config/omniroute/omniroute.env   # OPENCODE/OPENROUTER/GOOGLE/OMNIROUTE_API_KEY
    ```
+
+   y que la unit de OmniRoute lo cargue con
+   `EnvironmentFile=%h/.config/omniroute/omniroute.env`. `OMNIROUTE_API_KEY`
+   tiene que estar exportada también donde arranca DSH.
 
 2. **Servicios arriba:**
 
@@ -56,10 +64,9 @@ in-process; OmniRoute global (`omniroute`) como `omniroute.service` de
    systemctl --user enable --now omniroute.service opencode-wrap.service
    ```
 
-3. **Settings de DSH:** fusioná `omniroute-settings.example.yaml` dentro de
-   `~/.dsh/settings.yaml` (bloques `llm-pi-ai.providers.omniroute` y
-   `subagent-model-selection`). El instalador no lo hace solo, para no
-   reescribir tu configuración.
+3. **Settings de DSH:** `python3 scripts/merge-settings.py` (lo hace también
+   `install.sh --all`). Si tu `settings.yaml` ya tiene `llm-pi-ai:` o
+   `subagent-model-selection:`, no lo toca: imprime las líneas a agregar a mano.
 
 4. **Instalar y configurar todo:**
 
@@ -68,8 +75,9 @@ in-process; OmniRoute global (`omniroute`) como `omniroute.service` de
    bash scripts/install.sh --all     # preset + combo + parche Gemini + verificación
    ```
 
-   O por partes: `install.sh`, `configure-code-combo.sh`,
-   `patch-gemini-max.sh`, `verify-installation.sh`.
+   O por partes: `install.sh`, `merge-settings.py`, `configure-code-combo.sh`,
+   `patch-gemini-max.sh`, `verify-installation.sh`. `install.sh` además
+   habilita `orquestador-quarantine.timer` (`NO_TIMER=1` para omitirlo).
 
 5. **Activar:** cuando `verify-installation.sh` diga `READY`, en DeepSeek
    Harness elegí el preset **Orquestador** y abrí una **sesión nueva** (los
@@ -79,11 +87,30 @@ in-process; OmniRoute global (`omniroute`) como `omniroute.service` de
    - pedí algo que escriba (p. ej. `echo x > a.md`): debe rechazarlo con
      "El Orquestador usa el shell solo para leer y verificar…";
    - delegá una tarea mínima con `omniroute_code` y mirá qué modelo contestó:
-     `tail -n 5 ~/.dsh/logs/omniroute-limit-events.jsonl`.
+     `bash scripts/status.sh`.
+
+### Cómo funciona la cuarentena
+
+```text
+OmniRoute call_logs ──> observer (plugin DSH) ──> .omniroute-limit-state.json
+                                                       │
+                     quarantine-controller (timer, 1 min)
+                                                       ├─> ~/.omniroute/quarantine-state.json  (lo lee el guard)
+                                                       └─> omniroute combo create code  (sin los modelos en cuarentena)
+```
+
+- Sólo reconfigura cuando cambia el conjunto admitido; el orden siempre es el
+  de `omniroute-code-combo.json`.
+- Nunca deja el combo vacío: si los 5 están en cuarentena mantiene el combo
+  completo y el guard del observer se niega a delegar.
+- Si `combo create` falla, restaura el combo completo.
+- `ORQ_RECONCILE_COMBO=0` en la unit: publica el estado pero no toca el combo
+  (por si preferís depender sólo del lockout nativo de OmniRoute).
+- Ver el plan sin tocar nada: `node ~/.dsh/.agent-presets/orchestrator/bin/quarantine-controller.mjs --dry-run`.
 
 ### Desactivar / volver atrás
 
-Elegí otro preset en DSH. Para restaurar una versión anterior del preset:
+Elegí otro preset en DSH; `bash scripts/uninstall.sh` quita preset y timer. Para restaurar una versión anterior del preset:
 `install.sh` deja `~/.dsh/.agent-presets/orchestrator.bak-<fecha>/`. El parche
 de Gemini deja `*.bak` con timestamp junto a cada archivo de OmniRoute; un
 `npm i -g omniroute` lo revierte por completo.
@@ -96,6 +123,15 @@ de Gemini deja `*.bak` con timestamp junto a cada archivo de OmniRoute; un
 - `<cwd>/.dsh-tmp/watchdog-stalls.jsonl`
 
 ## Cambios respecto del bundle original
+
+**Piezas nuevas** (faltaban en el bundle): controlador de cuarentena + timer
+systemd, `merge-settings.py`, `status.sh`, `uninstall.sh`,
+`omniroute.env.example`, tests y CI (sintaxis, tests, ShellCheck).
+
+**Fuera del alcance de este bundle** (se mencionan en el preset pero son de
+cada proyecto o de tu máquina): `scripts/hf.sh` / `scripts/serve.sh` y las
+units `hf-studio-*.service` de HyperFrames, `omniroute.service`,
+`opencode-wrap.service` (`ocwrap`) y `~/opencode-usage-widget/`.
 
 **Guard read-only (`orchestrator-readonly-policy-v2.js`)**
 - Cierra huecos de escritura: `git switch|cherry-pick|revert|tag|worktree|am|clone|init`, `git -C <dir> …`, `git branch -D/-m`, `find -delete` / `find -exec rm`, y `python -c` / `node -e` que escriben archivos.

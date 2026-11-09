@@ -1,0 +1,12 @@
+[Unit]
+Description=Orquestador: aplica la cuarentena de modelos al combo code de OmniRoute
+After=omniroute.service
+Wants=omniroute.service
+
+[Service]
+Type=oneshot
+# Rendered by scripts/install.sh: absolute node path and the PATH where `omniroute` lives.
+Environment=PATH=@PATH@
+Environment=ORQ_RECONCILE_COMBO=1
+ExecStart=@NODE@ --disable-warning=ExperimentalWarning @PRESET_DIR@/bin/quarantine-controller.mjs
+Nice=10
