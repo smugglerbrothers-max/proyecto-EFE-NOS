@@ -16,21 +16,55 @@ cómo responde.
 | `simulador.py` | Intérprete del IL, con scan de 10 ms y la semántica del FX. También el tablero y las señales analógicas. |
 | `tests/test_logica.py` | Pruebas automáticas (pytest): los 7 casos pedidos y otras pruebas del plan de la Memoria. |
 | `guion.py` | Línea de tiempo del video: escenas, acciones del operador, rampas de nivel, temperatura y presión, y verificaciones. |
-| `render.py` | Dibuja cada cuadro con Pillow y lo codifica con FFmpeg. Además guarda las capturas. |
-| `video_simulacion_PLC_torre.mp4` | Video final: 1920×1080, 30 fps, 2 min 51 s. |
-| `capturas/` | Capturas PNG de cada escena: una 2,5 s después de cada paso del guion, más la portada y el cierre. |
+| `narracion.py` | Narración: voz sintética (Piper) o grabaciones propias, y mezcla de la pista de audio. |
+| `render.py` | Dibuja cada cuadro con Pillow, lo codifica con FFmpeg y le agrega la narración. Además guarda las capturas. |
+| `video_simulacion_PLC_torre.mp4` | Video final narrado: 1920×1080, 30 fps, 2 min 50 s. |
+| `video_simulacion_PLC_torre.srt` | Subtítulos aparte, por si el reproductor los pide. |
+| `narracion/guion_locucion.md` | Todas las frases de la narración, con su identificador y su minuto en el video. |
+| `capturas/` | Capturas PNG de cada escena: una 2 s después de cada paso del guion, más la portada y el cierre. |
 
 ## Cómo volver a generarlo
 
 Necesitas Python 3.10 o superior y FFmpeg (`ffmpeg` debe estar en el PATH).
 
 ```bash
-pip install pillow pytest
+pip install pillow numpy pytest piper-tts
+# voz de la narración (una sola vez, ~115 MB; no se sube al repositorio)
+mkdir -p narracion/voces && cd narracion/voces
+B=https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_AR/daniela/high
+curl -LO $B/es_AR-daniela-high.onnx && curl -LO $B/es_AR-daniela-high.onnx.json
+cd ../..
+
 python -m pytest -q          # 1) las pruebas deben pasar
 python guion.py              # 2) (opcional) corre el guion sin video y muestra las verificaciones
-python render.py             # 3) corre las pruebas de nuevo, genera el MP4 y las capturas (~5 min)
+python render.py             # 3) corre las pruebas de nuevo y genera el MP4 narrado, las capturas,
+                             #    el .srt y el guion de locución (~6 min)
+python render.py --sin-voz         # video mudo, como la primera versión
 python render.py --solo-capturas   # solo las PNG, en ~10 s
 ```
+
+Si falta el modelo de Piper, la narración usa espeak-ng (`apt install espeak-ng`), que suena más
+robótico.
+
+## Narración con voz propia
+
+La voz del video es sintética: Piper, con la voz "es_AR-daniela-high", la más cercana al español
+de Chile entre las disponibles. Para presentarlo, queda mejor con la voz de ustedes:
+
+1. Abran `narracion/guion_locucion.md`. Ahí está cada frase con su identificador (`e02_01`,
+   `e02_02`…).
+2. Graben cada frase en un archivo con ese nombre dentro de `narracion/grabada/`, por ejemplo
+   `narracion/grabada/e02_01.m4a`. Sirve .wav, .mp3, .m4a u .ogg, grabado con el celular. Lo que
+   va entre paréntesis (los números de línea) aparece en pantalla y no hace falta decirlo.
+3. Vuelvan a correr `python render.py`.
+
+El render recorta los silencios del inicio y del final, empareja el volumen y alarga cada escena
+lo necesario para que ninguna frase se corte ni se pise con la siguiente. Las frases que no estén
+grabadas siguen con la voz sintética, así que pueden grabar solo algunas.
+
+Para que la narración se entienda, el guion espera a que termine cada frase antes del siguiente
+paso del operador (pulsar, girar un selector, cambiar una señal). Las respuestas del PLC no esperan:
+ocurren en el momento en que el programa las produce.
 
 `render.py` no genera el video si falla alguna prueba de pytest. También se detiene, indicando
 la escena, la condición y las líneas del programa involucradas, si alguna verificación del guion no

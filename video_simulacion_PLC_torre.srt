@@ -1,0 +1,119 @@
+1
+00:00:00,800 --> 00:00:10,383
+Simulación del programa PLC de la torre de enfriamiento de Costa Azul. Como no pudimos probarlo en el equipo real, ejecutamos el programa ciclo a ciclo, igual que el PLC.
+
+2
+00:00:10,433 --> 00:00:14,883
+Partimos con los estanques al 60 %, el agua a 30 °C y todo detenido.
+
+3
+00:00:14,933 --> 00:00:22,583
+Al pulsar S1, el PLC enciende H12. Con el mismo pulso parten G1 y G3: primero se abren VA-01 y VA-07 (líneas 8, 14, 19, 28 y 31).
+
+4
+00:00:22,633 --> 00:00:27,350
+Tres segundos después parten las bombas P-3701A y P-3702E (líneas 21–22 y 33–34).
+
+5
+00:00:27,400 --> 00:00:35,912
+Con S41 habilitamos la torre: se abre VA-03, se cierra el by-pass VA-04, se enciende H13 y parte el ventilador (líneas 9, 11 y 12).
+
+6
+00:00:36,900 --> 00:00:42,783
+Al girar S11, el PLC cierra VA-01, detiene P-3701A y abre VA-02 (líneas 19 y 20).
+
+7
+00:00:42,833 --> 00:00:48,350
+Tres segundos después parte P-3701B. Las dos bombas nunca funcionan juntas (líneas 22 y 24).
+
+8
+00:00:48,400 --> 00:00:52,483
+G3 trabaja en paralelo con G1: su permiso exige que G1 esté en marcha (línea 27).
+
+9
+00:00:52,533 --> 00:00:55,683
+Si detenemos G1 con S13, G3 también se detiene (líneas 14 y 29).
+
+10
+00:00:55,733 --> 00:01:00,650
+Al dar marcha con S12, G1 parte con la bomba B y G3 rearranca solo (líneas 14, 28 y 30).
+
+11
+00:01:00,700 --> 00:01:05,383
+Ahora calentamos el agua de T-3702. Aceleramos el tiempo x5.
+
+12
+00:01:05,433 --> 00:01:11,450
+Sobre 40 °C, el PLC pide recirculación: parte G2, abre VA-05 y activa KA1 (líneas 39 a 44 y 66).
+
+13
+00:01:11,500 --> 00:01:18,483
+Tres segundos después parte P-3702C. KA1 baja G1 y G3 a segunda velocidad para no sobrecargar la torre.
+
+14
+00:01:18,533 --> 00:01:22,983
+Simulamos que T-3701 se vacía. Tiempo acelerado x10.
+
+15
+00:01:23,033 --> 00:01:27,650
+Con 15 % o menos, G1 se detiene y se enciende H7. G3 se detiene con él (líneas 13, 15, 27 y 50).
+
+16
+00:01:27,700 --> 00:01:31,617
+El estanque se recupera, pero G1 espera hasta llegar a 50 % (línea 16).
+
+17
+00:01:31,667 --> 00:01:36,383
+Al llegar a 50 %, G1 rearranca solo y G3 lo sigue (líneas 14, 16 y 30).
+
+18
+00:01:36,433 --> 00:01:40,350
+Ahora simulamos una caída de presión: PIT-01 baja a 6 bar.
+
+19
+00:01:40,400 --> 00:01:45,583
+El PLC espera 30 segundos bajo 8 bar antes de dar la alarma (línea 37). Aceleramos x5.
+
+20
+00:01:45,633 --> 00:01:49,483
+Se cumplen los 30 segundos: se enciende H14 y suena la bocina (líneas 38 y 58).
+
+21
+00:01:49,533 --> 00:01:54,483
+Con S52 reconocemos la alarma: la bocina se calla, pero H14 sigue encendida (líneas 56 a 58).
+
+22
+00:01:54,533 --> 00:02:00,817
+Al normalizar la presión, H14 se apaga. G3 nunca se detuvo, para no dejar sin agua al condensador.
+
+23
+00:02:00,867 --> 00:02:06,550
+Ahora rellenamos T-3702 a mano. Está en 60 %, bajo el límite de 70 %.
+
+24
+00:02:06,600 --> 00:02:11,983
+Pulsamos S51 y el PLC abre VA-09 con agua de osmosis (líneas 61 y 63). Tiempo x5.
+
+25
+00:02:12,033 --> 00:02:17,817
+Al 80 % se cierra VA-09. Ese nivel también es alto: se enciende H10 y G1 se detiene (líneas 13, 53 y 62).
+
+26
+00:02:17,867 --> 00:02:21,850
+G3 sigue sacando agua de T-3702 y el nivel baja (línea 27).
+
+27
+00:02:21,900 --> 00:02:25,687
+Bajo 70 %, G1 rearranca solo (línea 18).
+
+28
+00:02:26,200 --> 00:02:30,550
+Al soltar S00 nada parte solo: hay que dar partida de nuevo con S1.
+
+29
+00:02:30,600 --> 00:02:38,938
+Accionamos la emergencia general S00: se detienen todas las bombas y el ventilador, y las válvulas quedan sin energía, en reposo (líneas 7 y 8).
+
+30
+00:02:39,233 --> 00:02:46,387
+En resumen, todas las comprobaciones resultaron correctas. La lógica se tomó tal cual del programa, sin modificarla.

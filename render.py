@@ -547,14 +547,47 @@ def correr_pytest() -> str:
     return f"{n.group(1)} pruebas automáticas (pytest) aprobadas" if n else "pruebas aprobadas"
 
 
+def _tiempo_srt(t: float) -> str:
+    ms = round(t * 1000)
+    return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
+
+
+def escribir_textos(rep: Reproductor) -> None:
+    """Subtítulos .srt y guion de locución (para grabar la narración con voz propia)."""
+    frases = rep.frases
+    srt = []
+    for k, f in enumerate(frases):
+        fin = frases[k + 1].t_video - 0.05 if k + 1 < len(frases) else rep.duracion_total
+        srt.append(f"{k + 1}\n{_tiempo_srt(f.t_video)} --> {_tiempo_srt(min(fin, f.t_video + f.duracion + 1.5))}\n"
+                   f"{f.texto}\n")
+    SALIDA_VIDEO.with_suffix(".srt").write_text("\n".join(srt), encoding="utf-8")
+
+    filas = ["# Guion de locución", "",
+             "Cada frase tiene un identificador. Para usar su propia voz, graben cada frase en un",
+             "archivo con ese nombre dentro de `narracion/grabada/` (por ejemplo `e02_01.wav`, también",
+             "sirve .mp3, .m4a u .ogg) y vuelvan a correr `python render.py`. El video se ajusta solo",
+             "a la duración de cada grabación; las frases que no estén grabadas usan la voz sintética.",
+             "Lo que va entre paréntesis aparece en pantalla, pero no hace falta decirlo.", "",
+             "| Id | Inicio | Escena | Texto |", "|---|---|---|---|"]
+    for f in frases:
+        esc = int(f.ident[1:3])
+        filas.append(f"| `{f.ident}` | {int(f.t_video // 60)}:{f.t_video % 60:04.1f} | {esc} | {f.texto} |")
+    (RAIZ / "narracion" / "guion_locucion.md").write_text("\n".join(filas) + "\n", encoding="utf-8")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--solo-capturas", action="store_true")
+    ap.add_argument("--sin-voz", action="store_true", help="video mudo (no genera narración)")
     ap.add_argument("--salida", default=str(SALIDA_VIDEO))
     args = ap.parse_args()
 
     resumen = correr_pytest()
-    rep = Reproductor(FPS)
+    narrador = None
+    if not args.sin_voz and not args.solo_capturas:
+        import narracion
+        narrador = narracion.preparar
+    rep = Reproductor(FPS, narrador=narrador)
     rep.pytest_resumen = resumen
     pant = Pantalla()
     if DIR_CAPTURAS.exists():
@@ -562,26 +595,27 @@ def main() -> None:
     DIR_CAPTURAS.mkdir()
 
     ffmpeg = None
+    video_mudo = Path(args.salida).with_name("_video_sin_audio.mp4")
     if not args.solo_capturas:
         ffmpeg = subprocess.Popen(
             ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
              "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "medium",
-             "-crf", "20", "-pix_fmt", "yuv420p", "-movflags", "+faststart", args.salida],
+             "-crf", "20", "-pix_fmt", "yuv420p", str(video_mudo)],
             stdin=subprocess.PIPE)
 
     capturas_hechas: set = set()
-    total = round(rep.duracion_total * FPS)
+    total = round(rep.duracion_estimada * FPS)
     for i, c in enumerate(rep.cuadros()):
         esc = c.escena
-        # capturas: 2,5 s después de cada acción del guion; portada y cierre al final
+        # capturas: 2 s después de cada paso del guion; portada y cierre completos
         pedir = []
         if esc.simula:
             for k, a in enumerate(esc.acciones):
                 if a.t_real is not None and (esc.numero, k) not in capturas_hechas \
-                        and c.t_escena >= min(a.t_real + 2.5, esc.duracion - 0.1):
+                        and c.t_escena >= a.t_real + 2.0:
                     capturas_hechas.add((esc.numero, k))
                     pedir.append(f"escena_{esc.numero:02d}_paso_{k + 1}.png")
-        elif (esc.numero, 0) not in capturas_hechas and c.t_escena >= esc.duracion - 0.1:
+        elif (esc.numero, 0) not in capturas_hechas and c.t_escena >= 9.0:
             capturas_hechas.add((esc.numero, 0))
             pedir.append(f"escena_{esc.numero:02d}.png")
         if ffmpeg is None and not pedir:
@@ -592,14 +626,25 @@ def main() -> None:
         if ffmpeg is not None:
             ffmpeg.stdin.write(im.tobytes())
         if i % 300 == 0:
-            print(f"  cuadro {i}/{total}  ({esc.numero}: {esc.titulo})", flush=True)
+            print(f"  cuadro {i}/~{total}  ({esc.numero}: {esc.titulo})", flush=True)
 
     if ffmpeg is not None:
         ffmpeg.stdin.close()
         ffmpeg.wait()
         if ffmpeg.returncode != 0:
             sys.exit("FFmpeg terminó con error.")
-        print(f"Video: {args.salida}")
+        if narrador is not None:
+            import narracion
+            pista = RAIZ / "narracion" / "pista_narracion.wav"
+            narracion.mezclar([(f.t_video, f.ruta) for f in rep.frases], rep.duracion_total, pista)
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(video_mudo), "-i", str(pista),
+                            "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest",
+                            "-movflags", "+faststart", args.salida], check=True)
+            video_mudo.unlink()
+            escribir_textos(rep)
+        else:
+            video_mudo.replace(args.salida)
+        print(f"Video: {args.salida}  ({rep.duracion_total:.1f} s)")
     print(f"Capturas: {DIR_CAPTURAS} ({len(list(DIR_CAPTURAS.glob('*.png')))} archivos)")
     for esc, v in rep.verificaciones:
         print(f"  [{'OK' if v.resultado else 'FALLA'}] Escena {esc.numero}: {v.descripcion}")

@@ -1,2 +1,6 @@
 __pycache__/
 .pytest_cache/
+narracion/voces/*.onnx
+narracion/sintetica/
+narracion/pista_narracion.wav
+_video_sin_audio.mp4
