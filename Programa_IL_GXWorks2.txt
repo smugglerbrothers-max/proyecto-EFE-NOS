@@ -1,0 +1,303 @@
+; ===== INICIALIZACIÓN Y ESCALADO DE SEÑALES ANALÓGICAS =====
+; Línea 0: Primer ciclo: configura FX3U-4AD (4 canales en modo 4–20 mA → 0–4000) y entradas analógicas integradas en corriente
+LD M8002
+TO K0 K0 H4444 K1
+SET M8280
+SET M8281
+; Línea 1: Lectura de CH1–CH4 del FX3U-4AD (BFM #10–#13) hacia D10–D13. Con M100 = ON (simulación) no se lee el bloque y D10–D13 se cargan a mano
+LD M8000
+ANI M100
+FROM K0 K10 D10 K4
+; Línea 2: LIT-01: D8280 (0–3200) → D100 nivel T-3701 en décimas de % (0–1000). 1000/3200 = 5/16
+LD M8000
+MUL D8280 K5 D200
+DIV D200 K16 D100
+; Línea 3: LIT-02: D8281 → D101 nivel T-3702 en décimas de %
+LD M8000
+MUL D8281 K5 D202
+DIV D202 K16 D101
+; Línea 4: TIT-01 y TIT-02: 0–4000 → 0–1000 (décimas de °C, rango 0–100 °C)
+LD M8000
+DIV D10 K4 D110
+DIV D11 K4 D111
+; Línea 5: FIT-01: 0–4000 → 0–300 (décimas de m³/h, rango 0–30 m³/h). 300/4000 = 3/40
+LD M8000
+MUL D12 K3 D204
+DIV D204 K40 D112
+; Línea 6: PIT-01: 0–4000 → 0–160 (décimas de bar, rango 0–16 bar). 160/4000 = 4/100
+LD M8000
+MUL D13 K4 D206
+DIV D206 K100 D113
+; ===== SEGURIDAD, PARTIDA GENERAL Y MODO TORRE =====
+; Línea 7: Emergencia general S00 (contacto NC del hongo): M1 = sin emergencia general. Cada emergencia de grupo actúa en el permiso de su grupo
+LD X002
+OUT M1
+; Línea 8: Partida/parada general con enclavamiento. X001 es NC: abre al pulsar parada
+LD X000
+OR M0
+AND X001
+AND M1
+OUT M0
+OUT Y034
+; Línea 9: Habilitar torre
+LD X021
+AND M0
+SET M2
+; Línea 10: Deshabilitar torre (también al detener el sistema)
+LD X022
+ORI M0
+RST M2
+; Línea 11: Torre habilitada: abre VA-03 (NC, se energiza para abrir) y cierra VA-04 (NA, se energiza para cerrar)
+LD M2
+AND M0
+OUT Y011
+OUT Y020
+OUT Y035
+; Línea 12: Ventilador de torre: torre habilitada, sin falla térmica (X030 NC) y sin emergencia general
+LD M2
+AND M0
+AND X030
+AND M1
+OUT Y006
+; ===== GRUPO 1 — BOMBAS P-3701A/B (AGUA CALIENTE A TORRE) =====
+; Línea 13: Permiso G1: nivel T-3701 > 15 % (no arranca en vacío), sin falla de VDF3/VDF4, sin emergencia del grupo (S01) y sin nivel alto en T-3702
+LD> D100 K150
+AND X025
+AND X003
+AND M0
+ANI M43
+OUT M11
+; Línea 14: Marcha G1: arranca al dar partida general, con marcha local o con pulso de rearranque. X012 es NC (parada local)
+LDP M0
+OR X011
+OR M12
+OR M15
+OR M10
+AND X012
+AND M11
+OUT M10
+; Línea 15: Memoriza detención de G1 por nivel bajo en T-3701
+LD<= D100 K150
+AND M0
+SET M13
+; Línea 16: Rearranque automático de G1 al recuperar 50 % en T-3701
+LD M13
+AND>= D100 K500
+AND M11
+PLS M12
+RST M13
+; Línea 17: Memoriza detención de G1 por nivel alto en T-3702
+LD M43
+AND M0
+SET M14
+; Línea 18: Rearranque automático de G1 cuando T-3702 baja de 70 %
+LD M14
+AND< D101 K700
+AND M11
+PLS M15
+RST M14
+; Línea 19: Selector G1 en A (X006 = OFF): abre VA-01
+LD M10
+ANI X006
+OUT Y007
+; Línea 20: Selector G1 en B (X006 = ON): abre VA-02
+LD M10
+AND X006
+OUT Y010
+; Línea 21: Retardo de 3 s: primero abre la válvula y después arranca la bomba
+LD Y007
+OUT T0 K30
+; Línea 22: Marcha P-3701A con interbloqueo eléctrico respecto de P-3701B
+LD T0
+ANI Y001
+OUT Y000
+; Línea 23: Retardo de 3 s para P-3701B
+LD Y010
+OUT T1 K30
+; Línea 24: Marcha P-3701B con interbloqueo respecto de P-3701A
+LD T1
+ANI Y000
+OUT Y001
+; ===== GRUPO 3 — BOMBAS P-3702E/F (AGUA FRÍA AL CONDENSADOR) =====
+; Línea 25: Bloqueo por nivel bajo en T-3702 (≤ 15 %)
+LD<= D101 K150
+SET M32
+; Línea 26: Fin del bloqueo al recuperar 50 %
+LD>= D101 K500
+RST M32
+; Línea 27: Permiso G3: sin bloqueo, sin falla de VDF1/VDF2, sin emergencia del grupo (S03) y en paralelo con G1 (o con nivel alto en T-3702, para bajarlo)
+LDI M32
+AND X027
+AND X005
+AND M0
+LD M10
+OR M43
+ANB
+OUT M31
+; Línea 28: Marcha G3. X020 es NC (parada local)
+LDP M0
+OR X015
+OR M33
+OR M30
+AND X020
+AND M31
+OUT M30
+; Línea 29: Memoriza detención de G3 por bloqueo o por detención de G1
+LD M32
+ORI M10
+AND M0
+SET M34
+; Línea 30: Rearranque automático de G3 al recuperar el permiso
+LD M34
+AND M31
+ANI M30
+PLS M33
+RST M34
+; Línea 31: Selector G3 en E (X010 = OFF): abre VA-07
+LD M30
+ANI X010
+OUT Y023
+; Línea 32: Selector G3 en F (X010 = ON): abre VA-08
+LD M30
+AND X010
+OUT Y024
+; Línea 33: Retardo 3 s P-3702E
+LD Y023
+OUT T4 K30
+; Línea 34: Marcha P-3702E (VDF1) con interbloqueo
+LD T4
+ANI Y005
+OUT Y004
+; Línea 35: Retardo 3 s P-3702F
+LD Y024
+OUT T5 K30
+; Línea 36: Marcha P-3702F (VDF2) con interbloqueo
+LD T5
+ANI Y004
+OUT Y005
+; Línea 37: Supervisión de presión: con G3 en marcha y PIT-01 < 8 bar durante 30 s
+LD M30
+AND< D113 K80
+OUT T11 K300
+; Línea 38: Alarma de baja presión en la línea al condensador: activa la bocina y la luz H14
+LD T11
+OUT M45
+OUT Y037
+; ===== GRUPO 2 — BOMBAS P-3702C/D (RECIRCULACIÓN) =====
+; Línea 39: Histéresis: activa recirculación con T-3702 > 40 °C
+LD> D111 K400
+SET M22
+; Línea 40: Desactiva recirculación con T-3702 < 25 °C
+LD< D111 K250
+RST M22
+; Línea 41: Demanda de recirculación: por temperatura o por nivel alto (contingencia de la filosofía), solo con torre habilitada
+LD M22
+OR M43
+AND M2
+OUT M23
+; Línea 42: Permiso G2: nivel T-3702 > 15 %, sin falla de PS3/PS4 y sin emergencia del grupo (S02)
+LD> D101 K150
+AND X026
+AND X004
+AND M0
+OUT M21
+; Línea 43: Marcha G2 por demanda. X014 es NC (parada local para cambio de bomba)
+LDP M23
+OR X013
+OR M20
+AND M23
+AND M21
+AND X014
+OUT M20
+; Línea 44: Selector G2 en C (X007 = OFF): abre VA-05
+LD M20
+ANI X007
+OUT Y021
+; Línea 45: Selector G2 en D (X007 = ON): abre VA-06
+LD M20
+AND X007
+OUT Y022
+; Línea 46: Retardo 3 s P-3702C
+LD Y021
+OUT T2 K30
+; Línea 47: Marcha P-3702C con interbloqueo
+LD T2
+ANI Y003
+OUT Y002
+; Línea 48: Retardo 3 s P-3702D
+LD Y022
+OUT T3 K30
+; Línea 49: Marcha P-3702D con interbloqueo
+LD T3
+ANI Y002
+OUT Y003
+; ===== ALARMAS, BOCINA Y REPOSICIÓN DE AGUA =====
+; Línea 50: Nivel bajo T-3701 (≤ 15 %): luz amarilla
+LD<= D100 K150
+OUT M40
+OUT Y026
+; Línea 51: Nivel alto T-3701 (≥ 80 %): luz roja (aviso; se llena por gravedad)
+LD>= D100 K800
+OUT M41
+OUT Y027
+; Línea 52: Nivel bajo T-3702 (< 15 %): luz amarilla
+LD< D101 K150
+OUT M42
+OUT Y030
+; Línea 53: Nivel alto T-3702 (≥ 80 %): luz roja; detiene G1 a través de su permiso
+LD>= D101 K800
+OUT M43
+OUT Y031
+; Línea 54: Temperatura T-3701 ≥ 50 °C sostenida 5 min
+LD>= D110 K500
+OUT T10 K3000
+; Línea 55: Alarma de alta temperatura
+LD T10
+OUT M44
+OUT Y032
+; Línea 56: Una alarma nueva desarma el reconocimiento para que vuelva a sonar la bocina
+LDP M44
+ORP M45
+RST M46
+; Línea 57: Reconocimiento con pulsador Reset
+LD X024
+SET M46
+; Línea 58: Bocina: suena con alarma activa no reconocida
+LD M44
+OR M45
+ANI M46
+OUT Y033
+; Línea 59: Reposición automática: inicia con nivel bajo en T-3702
+LD M42
+AND M0
+SET M50
+; Línea 60: Reposición automática: termina al llegar a 50 %
+LD>= D101 K500
+RST M50
+; Línea 61: Relleno manual: solo si T-3702 ≤ 70 %
+LD X023
+AND<= D101 K700
+AND M0
+SET M51
+; Línea 62: Relleno manual: termina al 80 % (criterio adoptado) o al detener el sistema
+LD>= D101 K800
+ORI M0
+RST M51
+; Línea 63: Electroválvula de osmosis VA-09
+LD M50
+OR M51
+OUT Y025
+; Línea 64: Prepara caudal en 32 bits para el totalizador
+LD M8000
+MOV D112 D210
+MOV K0 D211
+; Línea 65: Totalizador: cada 1 s (M8013) suma el caudal. Total en m³ = (D301,D300) / 36000
+LD Y025
+ANDP M8013
+DADD D300 D210 D300
+; Línea 66: Segunda velocidad de G1 y G3 (15 m³/h) mientras opera la recirculación: el ingreso a la torre no supera sus 30 m³/h
+LD M20
+OUT Y036
+
+; Línea 67: Fin de programa
+END
