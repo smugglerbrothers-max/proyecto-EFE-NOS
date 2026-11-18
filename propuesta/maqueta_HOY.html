@@ -1,0 +1,310 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Maqueta HOY · Pizarra Operativa 2.0</title>
+<style>
+:root{--bg:#0f1720;--pan:#17212b;--bd:#26323f;--tx:#e6edf3;--mut:#8b98a5;--ok:#3fb950;--run:#2f81f7;--warn:#d29922;--bad:#f85149}
+*{box-sizing:border-box}body{margin:0;font:14px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--pan)}
+nav a{color:var(--mut);text-decoration:none;padding:6px 10px;border-radius:6px}nav a.on{background:#f0883e;color:#111;font-weight:600}
+.fecha{font-weight:700;font-size:16px}.sp{flex:1}
+.kpis{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px}.kpi{background:var(--pan);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;min-width:110px}
+.kpi b{display:block;font-size:20px}.kpi span{color:var(--mut);font-size:12px}.kpi.al b{color:var(--bad)}
+main{display:grid;grid-template-columns:1fr 330px;gap:16px;padding:0 16px 24px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;align-items:start}
+h3{margin:6px 0;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}h3 small{background:var(--bd);border-radius:10px;padding:1px 7px;color:var(--tx)}
+.card{background:var(--pan);border:1px solid var(--bd);border-left:4px solid var(--run);border-radius:8px;margin-bottom:8px}
+.card.warn{border-left-color:var(--warn)}summary{list-style:none;cursor:pointer;padding:8px 10px}summary::-webkit-details-marker{display:none}
+.l1{display:flex;gap:6px;align-items:center;font-size:11px}.obra{color:var(--mut)}.estado{background:#23303d;border-radius:4px;padding:1px 6px}
+.chip-al{color:var(--warn);margin-left:auto}.tit{font-weight:600;margin:3px 0}
+.meta{display:flex;flex-wrap:wrap;gap:4px 10px;color:var(--mut);font-size:12px}
+.det{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;padding:4px 12px 10px;border-top:1px solid var(--bd)}.det .full{grid-column:1/-1}
+.det h4{margin:8px 0 2px;font-size:11px;color:var(--mut);text-transform:uppercase}.det ul{margin:0;padding-left:16px}.det p{margin:0}
+.mut{color:var(--mut)}aside{background:var(--pan);border:1px solid var(--bd);border-radius:8px;padding:10px;align-self:start;position:sticky;top:8px;max-height:92vh;overflow:auto}
+aside ul{list-style:none;margin:0;padding:0}aside li{border-left:3px solid var(--warn);padding:5px 8px;margin:6px 0;background:#1c2733;border-radius:4px}
+aside li.alta{border-left-color:var(--bad)}aside li b{display:block;font-size:12px}aside li span{font-size:12px;color:var(--mut)}aside a{color:#58a6ff;font-size:12px;display:block}aside li.info{border-left-color:var(--mut)}
+aside summary{cursor:pointer}.it{font-size:12px;color:var(--mut);margin:4px 0 0}.lk{padding-left:8px}
+@media(max-width:820px){main{grid-template-columns:1fr}aside{position:static;max-height:none;order:-1}.det{grid-template-columns:1fr}}
+</style></head><body>
+<header><span class="fecha">HOY · miércoles 18-11-2026</span><span>☀ Diurno / ☾ Nocturno</span><span class="sp"></span>
+<nav><a class="on">Hoy</a><a>Programa</a><a>Recursos</a><a>Gestión</a><a>Control</a></nav></header>
+<div class="kpis">
+ <div class="kpi"><b>13</b><span>Programadas</span></div><div class="kpi"><b>0</b><span>En ejecución</span></div>
+ <div class="kpi"><b>0</b><span>Terminadas</span></div><div class="kpi"><b>6</b><span>Con alerta grave</span></div>
+ <div class="kpi"><b>3</b><span>Cuadrillas activas</span></div><div class="kpi"><b>11 · 5</b><span>Personas · Máquinas</span></div>
+ <div class="kpi al"><b>28</b><span>Alertas</span></div></div>
+<main><div class="cols"><section><h3>☀ Turno diurno <small>12</small></h3>
+<details class="card warn" id="tarj-s16-chena-2026-11-18-916d87">
+ <summary>
+  <div class="l1"><span class="obra">EFE CHENA</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 2</span></div>
+  <div class="tit">Impermeabilización M1</div>
+  <div class="meta"><span>📍 Patio maniobras, grúa y accesos</span><span>⛓ —</span>
+   <span>👷 Cristian Ochoa</span><span>👥 Terreno</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (1)</h4><ul><li>Cristian Ochoa</li></ul></div>
+  <div><h4>Maquinaria / vehículos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Equipos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 gl/turno · partida Tarjeta Sem. 16-11 (CHENA)</p>
+   <h4>Entregable</h4><p>Patio maniobras, grúa y accesos</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>M1 impermeabilizada · M2 → portal oriente (arena y emboquillado) · ángulos de abrazaderas | ↻ 3 actividades de arrastre | Impermeabilizar antes de rellenar | Glosa: Probable trabajo nocturno para mover las CAG en poste (</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="tarj-s16-chena-2026-11-18-5dd601">
+ <summary>
+  <div class="l1"><span class="obra">EFE CHENA</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 2</span></div>
+  <div class="tit">↻ Cama de arena M2 a portal oriente</div>
+  <div class="meta"><span>📍 Cámaras C3 / M2 y banco ducto retención</span><span>⛓ —</span>
+   <span>👷 Cristian Ochoa</span><span>👥 Terreno</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (1)</h4><ul><li>Cristian Ochoa</li></ul></div>
+  <div><h4>Maquinaria / vehículos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Equipos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 gl/turno · partida Tarjeta Sem. 16-11 (CHENA)</p>
+   <h4>Entregable</h4><p>Cámaras C3 / M2 y banco ducto retención</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>M1 impermeabilizada · M2 → portal oriente (arena y emboquillado) · ángulos de abrazaderas | ↻ 3 actividades de arrastre | Impermeabilizar antes de rellenar | Glosa: Probable trabajo nocturno para mover las CAG en poste (</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="tarj-s16-chena-2026-11-18-e818fa">
+ <summary>
+  <div class="l1"><span class="obra">EFE CHENA</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 2</span></div>
+  <div class="tit">↻ Emboquillado M2 a portal oriente</div>
+  <div class="meta"><span>📍 Cámaras C3 / M2 y banco ducto retención</span><span>⛓ —</span>
+   <span>👷 Cristian Ochoa</span><span>👥 Terreno</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (1)</h4><ul><li>Cristian Ochoa</li></ul></div>
+  <div><h4>Maquinaria / vehículos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Equipos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 gl/turno · partida Tarjeta Sem. 16-11 (CHENA)</p>
+   <h4>Entregable</h4><p>Cámaras C3 / M2 y banco ducto retención</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>M1 impermeabilizada · M2 → portal oriente (arena y emboquillado) · ángulos de abrazaderas | ↻ 3 actividades de arrastre | Impermeabilizar antes de rellenar | Glosa: Probable trabajo nocturno para mover las CAG en poste (</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="tarj-s16-chena-2026-11-18-b9143f">
+ <summary>
+  <div class="l1"><span class="obra">EFE CHENA</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 2</span></div>
+  <div class="tit">Instalación ángulos de abrazaderas barras de accionamiento</div>
+  <div class="meta"><span>📍 Patio maniobras, grúa y accesos</span><span>⛓ —</span>
+   <span>👷 Cristian Ochoa</span><span>👥 Terreno</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (2)</h4><ul><li>Leonardo Arancibia</li><li>Cristian Ochoa</li></ul></div>
+  <div><h4>Maquinaria / vehículos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Equipos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 gl/turno · partida Tarjeta Sem. 16-11 (CHENA)</p>
+   <h4>Entregable</h4><p>Patio maniobras, grúa y accesos</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>M1 impermeabilizada · M2 → portal oriente (arena y emboquillado) · ángulos de abrazaderas | ↻ 3 actividades de arrastre | Impermeabilizar antes de rellenar | Glosa: Probable trabajo nocturno para mover las CAG en poste (</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="tarj-s16-chena-2026-11-18-ad6c4e">
+ <summary>
+  <div class="l1"><span class="obra">EFE CHENA</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 2</span></div>
+  <div class="tit">Retiro de conductores desde los cuernos hasta los rectificadores</div>
+  <div class="meta"><span>📍 Pórtico salida SER poniente (CAG / seccionadores)</span><span>⛓ —</span>
+   <span>👷 Cristian Ochoa</span><span>👥 Terreno</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (1)</h4><ul><li>Cristian Ochoa</li></ul></div>
+  <div><h4>Maquinaria / vehículos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Equipos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 gl/turno · partida Tarjeta Sem. 16-11 (CHENA)</p>
+   <h4>Entregable</h4><p>Pórtico salida SER poniente (CAG / seccionadores)</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>M1 impermeabilizada · M2 → portal oriente (arena y emboquillado) · ángulos de abrazaderas | ↻ 3 actividades de arrastre | Impermeabilizar antes de rellenar | Glosa: Probable trabajo nocturno para mover las CAG en poste (</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="tarj-s16-lmt-2026-11-18-cf0afa">
+ <summary>
+  <div class="l1"><span class="obra">EFE LMT</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 6</span></div>
+  <div class="tit">Descarga en La Estancilla con camión pluma Mariano (21/21)</div>
+  <div class="meta"><span>📍 E2</span><span>⛓ P82–P88</span>
+   <span>👷 Erik Bravo</span><span>👥 Terreno</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (3)</h4><ul><li>Claudio Pardo</li><li>Erik Bravo</li><li>Mariano Ortiz</li></ul></div>
+  <div><h4>Maquinaria / vehículos (3)</h4><ul><li>Camión pluma (brazo articulado) 2</li><li>Camión pluma (brazo articulado) 1</li><li>Camión rampla extensible 1</li></ul></div>
+  <div><h4>Equipos (1)</h4><ul><li>Máquina Georradar GEO-X (carro)</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 gl/turno · partida Tarjeta Sem. 16-11 (LMT)</p>
+   <h4>Entregable</h4><p>E2</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>10 postes GEO-X (N°51–60) · postes junto a la vía (anotar N°) · 7 postes en La Estancilla (14/21) | GEO-X: mínimo 10 postes por día | AM: paso de postes por el cerco - PM: rampla Vima a La Estancilla | Camión pluma: Mari</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="tarj-s16-lmt-2026-11-18-1c4b3b">
+ <summary>
+  <div class="l1"><span class="obra">EFE LMT</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 7</span></div>
+  <div class="tit">Geodetección GEO-X - postes N°71 a 80 - acumulado 30/30</div>
+  <div class="meta"><span>📍 E2</span><span>⛓ P71–P80</span>
+   <span>👷 Erik Bravo</span><span>👥 Terreno</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (3)</h4><ul><li>Mariano Ortiz</li><li>Claudio Arrau</li><li>Erik Bravo</li></ul></div>
+  <div><h4>Maquinaria / vehículos (2)</h4><ul><li>Camión pluma (brazo articulado) 1</li><li>Camión rampla extensible 1</li></ul></div>
+  <div><h4>Equipos (1)</h4><ul><li>Máquina Georradar GEO-X (carro)</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 gl/turno · partida Tarjeta Sem. 16-11 (LMT)</p>
+   <h4>Entregable</h4><p>E2</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>10 postes GEO-X (N°51–60) · postes junto a la vía (anotar N°) · 7 postes en La Estancilla (14/21) | GEO-X: mínimo 10 postes por día | AM: paso de postes por el cerco - PM: rampla Vima a La Estancilla | Camión pluma: Mari</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="act07666acd-c98d-4151-aa60-2474f66194f5">
+ <summary>
+  <div class="l1"><span class="obra">EFE LMT</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 2</span></div>
+  <div class="tit">Limpieza y marcación con cal de puntos de postes</div>
+  <div class="meta"><span>📍 E1</span><span>⛓ P59–P65</span>
+   <span>👷 Coordinación</span><span>👥 Externo (sin dotación)</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (2)</h4><ul><li>Nicolás Ludueña</li><li>Claudio Arrau</li></ul></div>
+  <div><h4>Maquinaria / vehículos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Equipos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Rendimiento</h4><p>7 postes/turno · partida LMT-LIM</p>
+   <h4>Entregable</h4><p>E1</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>Día 3 de 12 · según Programa (Inicio/Fin calculados 2026-10-26 → 2026-11-13)</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="actcfd45d37-d4cd-4cf0-a41a-43ecab29ce49">
+ <summary>
+  <div class="l1"><span class="obra">EFE LMT</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 3</span></div>
+  <div class="tit">Excavación manual línea L3</div>
+  <div class="meta"><span>📍 E1</span><span>⛓ P19</span>
+   <span>👷 Erik Bravo</span><span>👥 Equipo Civil — Excavación manual</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (2)</h4><ul><li>Erik Bravo</li><li>Paul Serrano</li></ul></div>
+  <div><h4>Maquinaria / vehículos (1)</h4><ul><li>Camioneta 1 (LMT Civil)</li></ul></div>
+  <div><h4>Equipos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Rendimiento</h4><p>0.5 postes/turno · partida E1-EXC-L3</p>
+   <h4>Entregable</h4><p>E1</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>Día 2 de 6 · según Programa (Inicio/Fin calculados 2026-11-17 → 2026-11-24)</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="act97083238-13ec-42dc-9a6a-b55fc71ecbd6">
+ <summary>
+  <div class="l1"><span class="obra">EFE LMT</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 1</span></div>
+  <div class="tit">Ingeniería de pórticos: levantamiento, cálculo y aprobación EFE</div>
+  <div class="meta"><span>📍 E4</span><span>⛓ P6–P7</span>
+   <span>👷 Coordinación</span><span>👥 Externo (sin dotación)</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (1)</h4><ul><li>Erik Bravo</li></ul></div>
+  <div><h4>Maquinaria / vehículos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Equipos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 días/turno · partida LMT-ING</p>
+   <h4>Entregable</h4><p>E4</p>
+   <h4>Preventiva</h4><p>No requiere</p></div>
+  <div class="full"><h4>Observaciones</h4><p>Día 3 de 20 · según Programa (Inicio/Fin calculados 2026-10-26 → 2026-11-20)</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="tarj-s16-lmt-2026-11-18-bf83b0">
+ <summary>
+  <div class="l1"><span class="obra">EFE LMT</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 6</span></div>
+  <div class="tit">↻ Carga de 7 postes en rampla Vima desde acopio Nos (desde 14:00)</div>
+  <div class="meta"><span>📍 E4</span><span>⛓ P1–P5</span>
+   <span>👷 Erik Bravo</span><span>👥 Terreno</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (4)</h4><ul><li>Pablo Sabelle</li><li>Paul Serrano</li><li>Francisco Oses</li><li>Erik Bravo</li></ul></div>
+  <div><h4>Maquinaria / vehículos (2)</h4><ul><li>Camión rampla extensible 1</li><li>Camión pluma (brazo articulado) 1</li></ul></div>
+  <div><h4>Equipos (1)</h4><ul><li>Máquina Georradar GEO-X (carro)</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 gl/turno · partida Tarjeta Sem. 16-11 (LMT)</p>
+   <h4>Entregable</h4><p>E4</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>10 postes GEO-X (N°51–60) · postes junto a la vía (anotar N°) · 7 postes en La Estancilla (14/21) | GEO-X: mínimo 10 postes por día | AM: paso de postes por el cerco - PM: rampla Vima a La Estancilla | Camión pluma: Mari</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details>
+<details class="card warn" id="tarj-s16-nos-2026-11-18-f706f3">
+ <summary>
+  <div class="l1"><span class="obra">EFE NOS</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 4</span></div>
+  <div class="tit">Confección e instalación de barreras duras pique de ataque</div>
+  <div class="meta"><span>📍 Pique de ataque hincado · retorno (−) / barreras duras</span><span>⛓ —</span>
+   <span>👷 Cristian Ochoa</span><span>👥 Terreno</span>
+   <span>☀ Diurno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (3)</h4><ul><li>Luis Basso</li><li>Cristian Ochoa</li><li>Mariano Ortiz</li></ul></div>
+  <div><h4>Maquinaria / vehículos (1)</h4><ul><li>Camión pluma (brazo articulado) 1</li></ul></div>
+  <div><h4>Equipos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 gl/turno · partida Tarjeta Sem. 16-11 (NOS)</p>
+   <h4>Entregable</h4><p>Pique de ataque hincado · retorno (−) / barreras duras</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>Izaje = maniobra de la tarjeta LMT (P5.1 y camión pluma Mariano) | Postes junto a la vía: fuera del gálibo, calzados y señalizados</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details></section><section><h3>☾ Turno nocturno <small>1</small></h3>
+<details class="card warn" id="tarj-s16-chena-2026-11-18-88e565">
+ <summary>
+  <div class="l1"><span class="obra">EFE CHENA</span>
+   <span class="estado st-programada">Programada</span>
+   <span class="chip-al">⚠ 1</span></div>
+  <div class="tit">↻ Instalación soportes y CAG poste oriente (probable turno noche)</div>
+  <div class="meta"><span>📍 Patio maniobras, grúa y accesos</span><span>⛓ —</span>
+   <span>👷 Cristian Ochoa</span><span>👥 Terreno</span>
+   <span>☾ Nocturno</span></div>
+ </summary>
+ <div class="det">
+  <div><h4>Personal (1)</h4><ul><li>Cristian Ochoa</li></ul></div>
+  <div><h4>Maquinaria / vehículos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Equipos (0)</h4><ul><li class=mut>Sin asignar</li></ul></div>
+  <div><h4>Rendimiento</h4><p>1 gl/turno · partida Tarjeta Sem. 16-11 (CHENA)</p>
+   <h4>Entregable</h4><p>Patio maniobras, grúa y accesos</p>
+   <h4>Preventiva</h4><p>Requiere preventiva EPF</p></div>
+  <div class="full"><h4>Observaciones</h4><p>M1 impermeabilizada · M2 → portal oriente (arena y emboquillado) · ángulos de abrazaderas | ↻ 3 actividades de arrastre | Impermeabilizar antes de rellenar | Glosa: Probable trabajo nocturno para mover las CAG en poste (</p></div>
+  <div class="full mut">Documentación e historial: se habilitan en la Etapa 4 (hoy no existen en los datos).</div>
+ </div>
+</details></section></div>
+<aside><h3>Requiere atención</h3><ul><li class="alta"><details open><summary><b>Recurso asignado simultáneamente</b> <small>6</small></summary><div class="it">Mariano Ortiz está en 3 actividades (Diurno)<div class=lk><a href="#tarj-s16-lmt-2026-11-18-cf0afa" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-cf0afa').open=true">Descarga en La Estancilla con camión p</a><a href="#tarj-s16-lmt-2026-11-18-1c4b3b" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-1c4b3b').open=true">Geodetección GEO-X - postes N°71 a 80 </a><a href="#tarj-s16-nos-2026-11-18-f706f3" onclick="document.getElementById('tarj-s16-nos-2026-11-18-f706f3').open=true">Confección e instalación de barreras d</a></div></div><div class="it">Camión pluma (brazo articulado) 1 está en 4 actividades (Diurno)<div class=lk><a href="#tarj-s16-lmt-2026-11-18-cf0afa" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-cf0afa').open=true">Descarga en La Estancilla con camión p</a><a href="#tarj-s16-lmt-2026-11-18-1c4b3b" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-1c4b3b').open=true">Geodetección GEO-X - postes N°71 a 80 </a><a href="#tarj-s16-lmt-2026-11-18-bf83b0" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-bf83b0').open=true">↻ Carga de 7 postes en rampla Vima des</a><a href="#tarj-s16-nos-2026-11-18-f706f3" onclick="document.getElementById('tarj-s16-nos-2026-11-18-f706f3').open=true">Confección e instalación de barreras d</a></div></div><div class="it">Camión rampla extensible 1 está en 3 actividades (Diurno)<div class=lk><a href="#tarj-s16-lmt-2026-11-18-cf0afa" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-cf0afa').open=true">Descarga en La Estancilla con camión p</a><a href="#tarj-s16-lmt-2026-11-18-1c4b3b" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-1c4b3b').open=true">Geodetección GEO-X - postes N°71 a 80 </a><a href="#tarj-s16-lmt-2026-11-18-bf83b0" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-bf83b0').open=true">↻ Carga de 7 postes en rampla Vima des</a></div></div><div class="it">Máquina Georradar GEO-X (carro) está en 3 actividades (Diurno)<div class=lk><a href="#tarj-s16-lmt-2026-11-18-cf0afa" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-cf0afa').open=true">Descarga en La Estancilla con camión p</a><a href="#tarj-s16-lmt-2026-11-18-1c4b3b" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-1c4b3b').open=true">Geodetección GEO-X - postes N°71 a 80 </a><a href="#tarj-s16-lmt-2026-11-18-bf83b0" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-bf83b0').open=true">↻ Carga de 7 postes en rampla Vima des</a></div></div><div class="it">Claudio Arrau está en 2 actividades (Diurno)<div class=lk><a href="#tarj-s16-lmt-2026-11-18-1c4b3b" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-1c4b3b').open=true">Geodetección GEO-X - postes N°71 a 80 </a><a href="#act07666acd-c98d-4151-aa60-2474f66194f5" onclick="document.getElementById('act07666acd-c98d-4151-aa60-2474f66194f5').open=true">Limpieza y marcación con cal de puntos</a></div></div><div class="it">Paul Serrano está en 2 actividades (Diurno)<div class=lk><a href="#actcfd45d37-d4cd-4cf0-a41a-43ecab29ce49" onclick="document.getElementById('actcfd45d37-d4cd-4cf0-a41a-43ecab29ce49').open=true">Excavación manual línea L3</a><a href="#tarj-s16-lmt-2026-11-18-bf83b0" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-bf83b0').open=true">↻ Carga de 7 postes en rampla Vima des</a></div></div></details></li><li class="media"><details ><summary><b>Documentación requerida sin respaldo</b> <small>12</small></summary><div class="it">«Impermeabilización M1» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#tarj-s16-chena-2026-11-18-916d87" onclick="document.getElementById('tarj-s16-chena-2026-11-18-916d87').open=true">Impermeabilización M1</a></div></div><div class="it">«↻ Cama de arena M2 a portal oriente» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#tarj-s16-chena-2026-11-18-5dd601" onclick="document.getElementById('tarj-s16-chena-2026-11-18-5dd601').open=true">↻ Cama de arena M2 a portal oriente</a></div></div><div class="it">«↻ Emboquillado M2 a portal oriente» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#tarj-s16-chena-2026-11-18-e818fa" onclick="document.getElementById('tarj-s16-chena-2026-11-18-e818fa').open=true">↻ Emboquillado M2 a portal oriente</a></div></div><div class="it">«Instalación ángulos de abrazaderas barras de accionamiento» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#tarj-s16-chena-2026-11-18-b9143f" onclick="document.getElementById('tarj-s16-chena-2026-11-18-b9143f').open=true">Instalación ángulos de abrazaderas bar</a></div></div><div class="it">«Retiro de conductores desde los cuernos hasta los rectificadores» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#tarj-s16-chena-2026-11-18-ad6c4e" onclick="document.getElementById('tarj-s16-chena-2026-11-18-ad6c4e').open=true">Retiro de conductores desde los cuerno</a></div></div><div class="it">«Descarga en La Estancilla con camión pluma Mariano (21/21)» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#tarj-s16-lmt-2026-11-18-cf0afa" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-cf0afa').open=true">Descarga en La Estancilla con camión p</a></div></div><div class="it">«Geodetección GEO-X - postes N°71 a 80 - acumulado 30/30» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#tarj-s16-lmt-2026-11-18-1c4b3b" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-1c4b3b').open=true">Geodetección GEO-X - postes N°71 a 80 </a></div></div><div class="it">«Limpieza y marcación con cal de puntos de postes» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#act07666acd-c98d-4151-aa60-2474f66194f5" onclick="document.getElementById('act07666acd-c98d-4151-aa60-2474f66194f5').open=true">Limpieza y marcación con cal de puntos</a></div></div><div class="it">«Excavación manual línea L3» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#actcfd45d37-d4cd-4cf0-a41a-43ecab29ce49" onclick="document.getElementById('actcfd45d37-d4cd-4cf0-a41a-43ecab29ce49').open=true">Excavación manual línea L3</a></div></div><div class="it">«↻ Carga de 7 postes en rampla Vima desde acopio Nos (desde 14:00)» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#tarj-s16-lmt-2026-11-18-bf83b0" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-bf83b0').open=true">↻ Carga de 7 postes en rampla Vima des</a></div></div><div class="it">«Confección e instalación de barreras duras pique de ataque» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#tarj-s16-nos-2026-11-18-f706f3" onclick="document.getElementById('tarj-s16-nos-2026-11-18-f706f3').open=true">Confección e instalación de barreras d</a></div></div><div class="it">«↻ Instalación soportes y CAG poste oriente (probable turno noche)» requiere preventiva EPF y no tiene una vinculada<div class=lk><a href="#tarj-s16-chena-2026-11-18-88e565" onclick="document.getElementById('tarj-s16-chena-2026-11-18-88e565').open=true">↻ Instalación soportes y CAG poste ori</a></div></div></details></li><li class="media"><details ><summary><b>Vencidas sin cierre ni reprogramación</b> <small>1</small></summary><div class="it">202 actividades con fecha anterior a hoy siguen &#x27;Programada&#x27; (sin cierre registrado)</div></details></li><li class="media"><details ><summary><b>Cuadrilla incompleta</b> <small>7</small></summary><div class="it">«Cuadrilla Descarga Postes Explanadas La Estancilla (Pluma + Rampla + P5.1)»: 1 de 6 integrantes no existen en la dotación</div><div class="it">«Equipo Geodetección GEO-X (Carro Georradar + Topógrafo + P5.1)»: 3 de 5 integrantes no existen en la dotación</div><div class="it">«Equipo Civil — Excavación manual (LMT)»: 6 de 7 integrantes no existen en la dotación</div><div class="it">«Equipo Mixto — Instalación / pórticos (LMT Nocturno)»: 3 de 10 integrantes no existen en la dotación</div><div class="it">«Cuadrilla Tendido (LMT Nocturno)»: 8 de 12 integrantes no existen en la dotación</div><div class="it">«Cuadrilla Espaciadores (LMT Nocturno)»: 6 de 8 integrantes no existen en la dotación</div><div class="it">«Cuadrilla Electromec. — Puente Maipo (LMT Nocturno)»: 3 de 10 integrantes no existen en la dotación</div></details></li><li class="info"><details ><summary><b>Supervisión en varios frentes</b> <small>2</small></summary><div class="it">Cristian Ochoa está en 6 actividades (Diurno)<div class=lk><a href="#tarj-s16-chena-2026-11-18-916d87" onclick="document.getElementById('tarj-s16-chena-2026-11-18-916d87').open=true">Impermeabilización M1</a><a href="#tarj-s16-chena-2026-11-18-5dd601" onclick="document.getElementById('tarj-s16-chena-2026-11-18-5dd601').open=true">↻ Cama de arena M2 a portal oriente</a><a href="#tarj-s16-chena-2026-11-18-e818fa" onclick="document.getElementById('tarj-s16-chena-2026-11-18-e818fa').open=true">↻ Emboquillado M2 a portal oriente</a><a href="#tarj-s16-chena-2026-11-18-b9143f" onclick="document.getElementById('tarj-s16-chena-2026-11-18-b9143f').open=true">Instalación ángulos de abrazaderas bar</a></div></div><div class="it">Erik Bravo está en 5 actividades (Diurno)<div class=lk><a href="#tarj-s16-lmt-2026-11-18-cf0afa" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-cf0afa').open=true">Descarga en La Estancilla con camión p</a><a href="#tarj-s16-lmt-2026-11-18-1c4b3b" onclick="document.getElementById('tarj-s16-lmt-2026-11-18-1c4b3b').open=true">Geodetección GEO-X - postes N°71 a 80 </a><a href="#actcfd45d37-d4cd-4cf0-a41a-43ecab29ce49" onclick="document.getElementById('actcfd45d37-d4cd-4cf0-a41a-43ecab29ce49').open=true">Excavación manual línea L3</a><a href="#act97083238-13ec-42dc-9a6a-b55fc71ecbd6" onclick="document.getElementById('act97083238-13ec-42dc-9a6a-b55fc71ecbd6').open=true">Ingeniería de pórticos: levantamiento,</a></div></div></details></li></ul></aside></main>
+<p class="mut" style="padding:0 16px 16px">Maqueta estática generada desde los datos reales del archivo original (13 actividades del 2026-11-18). No es la versión funcional.</p>
+</body></html>
