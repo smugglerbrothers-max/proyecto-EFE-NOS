@@ -1,0 +1,5 @@
+# Lista blanca: Vercel SOLO recibe lo publicable.
+# original/ y propuesta/ contienen datos personales (RUT, celulares, nombres) y nunca deben desplegarse.
+/*
+!public
+!vercel.json
