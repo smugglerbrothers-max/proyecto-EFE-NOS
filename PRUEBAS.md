@@ -8,6 +8,8 @@ Ejecutar: `node --test tests/*.test.mjs` (Node 22, sin dependencias).
 |---|---|---|---|
 | 18-11-2026 | 1 | Apertura del original en Chromium (Playwright), 12 de 13 vistas recorridas, captura en móvil | Sin errores de consola. "Mañana" no se pudo pulsar (no visible en 1440 px). Panel Informe vacío (archivo externo ausente) |
 | 18-11-2026 | 3 | `tests/motor.test.mjs`: 15 pruebas sobre los datos reales del original | **15/15 OK** |
+| 18-11-2026 | 10/11 | `npm run test:sql`: esquema Supabase en Postgres local (PGlite) con auth simulado: RLS, roles, concurrencia, aprobación, auditoría inmutable | **23/23 OK** |
+| 18-11-2026 | despliegue | Vista previa de Vercel de la rama: `/` sirve la página provisional; `/original/Pizarra_Operaciones_2026-11-13.html` responde 404; cabeceras `noindex`, `nosniff`, `SAMEORIGIN` presentes | OK |
 
 ### Detalle Fase 3 (motor)
 

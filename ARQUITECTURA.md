@@ -114,3 +114,22 @@ datos/ (ignorado por git)    plan de trabajo, propuestas, auditoría, conversaci
 | 4 | Ciclo de herramientas propio (Messages API), no agentes gestionados | Agente alojado por el proveedor | Aprobaciones locales, multiproveedor, datos locales, funcionamiento sin conexión con Ollama |
 | 5 | Auditoría JSONL de solo agregado | Base de datos | Simple, legible, respaldable; volumen bajo |
 | 6 | Concurrencia optimista por revisión | Último en guardar gana | Requisito explícito: no sobrescribir en silencio |
+
+## 8. Decisión 18-11-2026: Vercel + Supabase en lugar del servidor local
+
+El usuario confirmó que los datos del proyecto pueden residir en Supabase (nube), con acceso solo para usuarios autorizados. Esto **reemplaza** el "modo servidor local" de §2; el modo archivo (sin IA) se mantiene.
+
+| Pieza de §3 | Implementación |
+|---|---|
+| API local `/api/*` | Funciones de Vercel en el proyecto `pizarra-operativa-2` (equipo lmt15), con el mismo motor `src/motor` |
+| Claves de IA | Variables de entorno de Vercel (solo en el servidor); nunca en el HTML |
+| Almacén `datos/` | Supabase `proyecto-EFE-NOS`: `planes` (JSON + revisión), `propuestas`, `auditoria` |
+| Usuarios y roles | Supabase Auth + `perfiles.rol` (`jefe_terreno`, `planificador`, `consulta`) con RLS |
+| Sync Manager | `guardar_plan(id, base_revision, datos)`: rechaza revisiones desactualizadas (`conflicto_revision`) |
+| Approval Manager | `decidir_propuesta()`: solo `jefe_terreno`; la aplicación de cambios sigue en el navegador |
+| Audit Manager | `auditoria` de solo agregado (trigger bloquea UPDATE/DELETE, TRUNCATE revocado) |
+| Ollama | No es accesible desde Vercel; solo como opción local futura desde el navegador del usuario |
+
+**Despliegue:** `vercel.json` + `.vercelignore` en lista blanca publican **solo `public/`**. `original/` y `propuesta/` (datos personales) nunca se despliegan; verificado con 404. Protección con cuenta de Vercel activa en todos los `*.vercel.app`. La pizarra en uso (`pizarra-operaciones`) no se tocó.
+
+**Región:** la base está en `us-west-2`. Para latencia desde Chile, `sa-east-1` (São Paulo) sería más cercana; cambiarla implica crear otro proyecto antes de cargar datos.
