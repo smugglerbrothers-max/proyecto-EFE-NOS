@@ -1,0 +1,8 @@
+{
+  "name": "pizarra-operativa-2",
+  "private": true,
+  "type": "module",
+  "description": "Pizarra Operativa Inteligente 2.0 — motor operacional y capa de IA sobre la pizarra original",
+  "scripts": { "test": "node --test tests/*.test.mjs" },
+  "engines": { "node": ">=22" }
+}

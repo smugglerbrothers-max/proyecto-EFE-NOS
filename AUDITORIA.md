@@ -131,7 +131,7 @@ Revisa desde hoy hasta un horizonte de 2 semanas para responsable, recursos y pr
 ## 6. Problemas detectados
 
 **Datos**
-1. **Cuadrillas con integrantes inexistentes:** 7 de 8 configuraciones referencian 41 ids que no están en `unidades` (por ejemplo `u-cap-civil-lmt` y `u-exc-lmt-1…4`). Al soltar la cuadrilla, esos integrantes no aparecen.
+1. **Cuadrillas con integrantes inexistentes:** 7 de 8 configuraciones tienen 30 referencias a ids que no están en `unidades` (por ejemplo `u-cap-civil-lmt` y `u-exc-lmt-1…4`). Al soltar la cuadrilla, esos integrantes no aparecen.
 2. **Estados sin uso real:** sin "En curso" ni "Terminada", la pizarra no refleja la ejecución. Además hay valores inconsistentes ("programada" en minúscula).
 3. **Conflictos de recursos reales:** hoy, el camión pluma 1 aparece en 4 actividades, la rampla y el GEO-X en 3, y Mariano Ortiz en 3. Hay 217 combinaciones recurso/fecha/turno duplicadas en total.
 4. Las observaciones de las actividades de tarjetas semanales repiten el mismo texto largo de la tarjeta completa.
@@ -173,3 +173,21 @@ Ver `PROPUESTA.md` (Etapa 2) y la maqueta `propuesta/maqueta_HOY.html`.
 2. Puente mínimo hacia el store y un script propio con los módulos HOY, navegación, alertas extendidas y persistencia de Gestión.
 3. Las vistas existentes se conservan tal cual y se reagrupan en 5 módulos.
 4. Migración controlada y reversible: solo se agregan campos opcionales; no se renombran ni borran datos.
+
+---
+
+## 9. Anexo (Fase 1, Pizarra Inteligente 2.0): brechas frente a la nueva visión
+
+| Capacidad requerida | Estado en el original | Consecuencia para el diseño |
+|---|---|---|
+| Backend o servidor | **No existe.** Es un HTML en el navegador; opcionalmente corre como escritorio Tauri (plugins `fs` y `dialog`), pero el shell Tauri no está en el repositorio | Las claves de API **no pueden** vivir en el HTML. La IA en la nube requiere un **servidor local** nuevo |
+| Horario de actividad | Solo turno (Diurno/Nocturno). Las horas existen únicamente en tarjetas de preventivas y cortadas | Campos opcionales `horaIni` y `horaFin`. Sin ellos, el motor informa "horario faltante" |
+| Plazos de preparación o anticipación | No existen | Configuración nueva; **sin valores por defecto inventados** |
+| Necesidad de cortada por actividad | No existe el campo. Solo una alerta informativa "faja vía" y la regla de equipo ferroviario en turno diurno | Campo opcional `requiereCortada`. El motor deduce "sí" o "posible", nunca "autorizada" |
+| Vínculo actividad ↔ preventiva | Campo `preventiva` previsto, pero ninguna de 573 actividades lo tiene | Vincular desde Gestión; la alerta existente sigue vigente |
+| Materiales por actividad | `abast.requerimientos` existe (con `actividad`) pero está **vacío** | El calendario de materiales funciona apenas se registren requerimientos |
+| Historial y trazabilidad | Solo deshacer en memoria (50 pasos); no hay bitácora | Audit Manager nuevo (registro solo de agregado) |
+| Usuarios y permisos | No hay identidad de usuario | Identidad local simple (nombre y rol) en el servidor; sin ella, el modo archivo sigue como hoy |
+| Sincronización | Guardado automático en localStorage + archivo HTML; sin control de versiones | Revisión por versión con detección de conflictos |
+
+**Hallazgo adicional del motor (18-11):** Cristian Ochoa está asignado al turno nocturno de CHENA y a turnos diurnos el mismo día. La regla de descanso del original también lo marca.
