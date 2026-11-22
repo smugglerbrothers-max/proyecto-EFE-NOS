@@ -113,3 +113,6 @@ def test_html_interactivo_al_dia():
     assert json.dumps(programa, ensure_ascii=False).replace("</", "<\\/") in html, \
         "el HTML no tiene el programa IL actual: corre python construir_interactivo.py"
     assert motor in html, "el HTML no tiene el motor actual: corre python construir_interactivo.py"
+    for nombre in ("ladder.js", "proceso.js"):
+        assert (RAIZ / "interactivo" / nombre).read_text(encoding="utf-8") in html, \
+            f"el HTML no tiene {nombre} actual: corre python construir_interactivo.py"

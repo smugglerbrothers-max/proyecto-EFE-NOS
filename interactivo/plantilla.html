@@ -149,6 +149,57 @@
   .prueba.hecha .ok { color: var(--verde); }
   .prueba p { margin: 0; font-size: 13px; }
   .prueba small { color: var(--tenue); font-size: 12px; }
+  /* tendencias */
+  .full { margin: 0 10px 10px; }
+  .barra-sup { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+  .barra-sup h2 { font-size: 17px; margin: 0; flex: 1 1 auto; }
+  .chips { display: flex; gap: 4px; }
+  .chips button { background: transparent; border: 1px solid var(--borde); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 13px; }
+  .chips button.sel { background: var(--azul); border-color: var(--azul); }
+  .ley { display: flex; gap: 14px; font-size: 13px; color: var(--texto); }
+  .ley i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: 4px; margin-right: 6px; }
+  #tendWrap { position: relative; }
+  #tend { width: 100%; height: 505px; display: block; cursor: crosshair; }
+  #tip { position: absolute; pointer-events: none; background: #0b1120f0; border: 1px solid var(--borde); border-radius: 8px;
+    padding: 7px 10px; font-size: 12.5px; line-height: 1.45; min-width: 190px; display: none; z-index: 5; }
+  #tip b { font-variant-numeric: tabular-nums; }
+  #tip i { display: inline-block; width: 12px; height: 3px; vertical-align: 3px; margin-right: 5px; }
+  .nota { font-size: 12px; color: var(--tenue); margin: 4px 0 0; }
+  .interruptor { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; font-weight: 600; }
+  .interruptor input { width: 18px; height: 18px; accent-color: var(--verde); }
+
+  /* ladder */
+  #ladder { max-height: 78vh; overflow: auto; background: #111a2d; border-radius: 10px; padding: 6px 10px; }
+  #ladder h4 { margin: 12px 0 2px; font-size: 13px; color: var(--azul); text-transform: uppercase; letter-spacing: .05em; }
+  .rung-w { border-bottom: 1px solid #22304a; padding: 4px 0; border-radius: 6px; }
+  .rung-w.flash { animation: flash 1.6s ease-out; }
+  @keyframes flash { from { background: color-mix(in srgb, var(--amarillo) 30%, transparent); } to { background: transparent; } }
+  .rung-w.activa .num { fill: var(--verde); }
+  #ladder svg.rung { display: block; width: auto; max-width: 100%; height: auto; }
+  .rung text { fill: var(--tenue); font-size: 10.5px; font-family: ui-monospace, Consolas, "DejaVu Sans Mono", monospace; }
+  .rung .tit { fill: var(--texto); font: 12.5px "Segoe UI", system-ui, sans-serif; }
+  .rung .num { fill: var(--amarillo); font-weight: 700; }
+  .rung .dev { fill: var(--texto); font-size: 11px; }
+  .rung .lw { stroke: #4a576e; stroke-width: 2; }
+  .rung .lw.on { stroke: var(--verde); stroke-width: 3.5; }
+  .rung .riel { stroke: #8a98af; stroke-width: 3; }
+  .rung .sym line { stroke: #9aa7bd; stroke-width: 2.5; }
+  .rung .sym .fondo { fill: transparent; }
+  .rung .sym.cerrado line { stroke: #9ec5f4; }
+  .rung .sym.cerrado .fondo { fill: #3b82f640; }
+  .rung .sym.on line { stroke: var(--verde); }
+  .rung .sym.on .fondo { fill: #22c55e40; }
+  .rung .sym.cmp rect { fill: #1d2840; stroke: #9aa7bd; stroke-width: 1.5; }
+  .rung .sym.cmp.cerrado rect { stroke: #9ec5f4; fill: #3b82f630; }
+  .rung .sym.cmp.on rect { stroke: var(--verde); fill: #22c55e30; }
+  .rung .sym text, .rung .bob text { fill: var(--texto); }
+  .rung .sym .flecha { fill: var(--amarillo); font-size: 13px; font-weight: 700; }
+  .rung .bob path { stroke: #9aa7bd; stroke-width: 2.5; fill: none; }
+  .rung .bob rect { fill: #1d2840; stroke: #9aa7bd; stroke-width: 1.5; }
+  .rung .bob.on path { stroke: var(--verde); stroke-width: 3.5; }
+  .rung .bob.on rect { stroke: var(--verde); fill: #22c55e30; }
+  .rung .bob.dev-on rect { stroke-dasharray: none; }
+  .ev, .ln { cursor: pointer; }
   footer { color: var(--tenue); font-size: 12px; padding: 0 16px 14px; }
   .oculto { display: none !important; }
 </style>
@@ -174,7 +225,9 @@
     <h2>Planta (esquema simplificado)</h2>
     <div class="leyenda"><span><i style="background:var(--verde)"></i>en marcha</span><span><i style="background:var(--gris)"></i>detenido</span><span><i style="background:var(--azul)"></i>válvula abierta</span><span><i style="background:var(--agua)"></i>agua circulando</span></div>
     <svg id="planta" viewBox="10 100 790 760" role="img" aria-label="Esquema de la planta"></svg>
-    <h3>Proceso: lo que miden los transmisores (muévelo para probar)</h3>
+    <h3>Proceso: lo que miden los transmisores</h3>
+    <label class="interruptor"><input type="checkbox" id="auto" checked> Proceso automático
+      <span style="font-weight:400;color:var(--tenue);font-size:12px">(los niveles y temperaturas cambian solos según las bombas y la torre; igual puedes moverlos)</span></label>
     <div class="proceso" id="proceso"></div>
   </section>
 
@@ -222,12 +275,42 @@
     </div>
   </section>
 </main>
+
+<section class="panel full" id="pTend">
+  <div class="barra-sup">
+    <h2>Tendencias</h2>
+    <div class="ley"><span><i style="background:#3987e5"></i>T-3701</span><span><i style="background:#d95926"></i>T-3702</span><span><i style="background:#199e70"></i>Presión PIT-01</span></div>
+    <div class="chips" id="ventana">
+      <button data-w="120">2 min</button><button data-w="600" class="sel">10 min</button><button data-w="1800">30 min</button><button data-w="3600">60 min</button>
+    </div>
+  </div>
+  <div id="tendWrap"><canvas id="tend"></canvas><div id="tip"></div></div>
+  <p class="nota">Eje horizontal: tiempo simulado. Bandas: grupos en marcha, VA-09 abierta y alarmas activas. Modelo de proceso simplificado
+    (5 m³ por estanque, 30 m³/h por grupo, 15 m³/h con KA1): sirve para ver la lógica, no reemplaza los datos de la planta.</p>
+</section>
+
+<section class="panel full" id="pLadder">
+  <div class="barra-sup">
+    <h2>Programa en Ladder — monitor en vivo</h2>
+    <label class="interruptor" style="font-weight:400"><input type="checkbox" id="seguir"> Seguir la línea que actúa</label>
+    <select id="irA" class="acc" style="padding:5px 8px"></select>
+  </div>
+  <p class="nota" style="margin:0 0 6px">Verde = pasa corriente. Celeste = contacto cerrado sin corriente. Lo que se pinta es lo que el PLC evaluó
+    en el último scan, como el modo monitor de GX Works2. Clic en una línea del monitor o del programa IL para saltar aquí.</p>
+  <div id="ladder"></div>
+</section>
 <footer>La lógica no está escrita en esta página: el programa IL va incluido tal cual y lo ejecuta un intérprete
   verificado contra el simulador de Python (mismo estado en cada scan). H1–H6 siguen la orden de marcha Y000–Y005
   (en terreno vienen del relé “en marcha” de cada variador). Jermain Bascour · Cristian Salas · Yeremi Tobar · Tamae Martinez.</footer>
 
 <script>
 /*__MOTOR__*/
+</script>
+<script>
+/*__LADDER__*/
+</script>
+<script>
+/*__PROCESO__*/
 </script>
 <script>
 "use strict";
@@ -238,14 +321,24 @@ const $ = (s) => document.querySelector(s);
 const NS = "http://www.w3.org/2000/svg";
 const coma = (v, d = 1) => v.toFixed(d).replace(".", ",");
 
-let plc, tab, planta, transiciones, inicioReal;
+let plc, tab, planta, proceso, transiciones, inicioReal;
 function iniciar() {
+  const auto = $("#auto").checked;
+  const carga = proceso ? proceso.cargaCondensador : 8, bh = proceso ? proceso.bulboHumedo : 22;
   plc = new M.PLC(PROG);
   tab = new M.Tablero(plc);
   planta = new M.Planta(tab);
+  proceso = new window.ProcesoPLC.ProcesoAutomatico(tab);
+  proceso.cargaCondensador = carga; proceso.bulboHumedo = bh;
+  aplicarModo(auto);
   transiciones = new Set();
   plc.scan();
+  if (typeof reiniciarTendencias === "function") reiniciarTendencias();
   sincronizarControles();
+}
+function aplicarModo(auto) {
+  proceso.activo = auto;
+  planta.rellenoPctS = auto ? 0 : 1.0;   // en automático el llenado por VA-09 lo calcula el proceso
 }
 
 // ------------------------------------------------------------------ planta (SVG)
@@ -408,7 +501,11 @@ const SLIDERS = [
   ["tempT1", "Temperatura T-3701 (TIT-01)", "°C", 0, 100, 0.5, "alarma ≥ 50 °C sostenida 5 min"],
   ["tempT2", "Temperatura T-3702 (TIT-02)", "°C", 0, 100, 0.5, "recirculación > 40 °C, se apaga < 25 °C"],
   ["presionDisponible", "Presión que entrega G3 (PIT-01)", "bar", 0, 16, 0.1, "alarma < 8 bar por 30 s con G3 en marcha"],
+  ["cargaCondensador", "Carga del condensador (proceso automático)", "°C", 0, 20, 0.5, "cuánto calienta el condensador el agua de G3"],
+  ["bulboHumedo", "Bulbo húmedo del aire (proceso automático)", "°C", 5, 35, 0.5, "hasta dónde puede enfriar la torre"],
 ];
+const DE_PROCESO = new Set(["cargaCondensador", "bulboHumedo"]);
+const objetoDe = (k) => k === "presionDisponible" ? planta : DE_PROCESO.has(k) ? proceso : tab;
 const sliderEls = {};
 function crearSliders() {
   const cont = $("#proceso");
@@ -419,16 +516,21 @@ function crearSliders() {
     const inp = d.querySelector("input"), out = d.querySelector("b");
     inp.addEventListener("input", () => {
       const v = parseFloat(inp.value);
-      if (k === "presionDisponible") planta.presionDisponible = v; else tab[k] = v;
+      objetoDe(k)[k] = v;
       out.textContent = `${coma(v)} ${u}`;
     });
+    inp.addEventListener("pointerdown", () => proceso.bloqueados.add(k));
+    const libera = () => proceso.bloqueados.delete(k);
+    inp.addEventListener("pointerup", libera);
+    inp.addEventListener("pointercancel", libera);
+    inp.addEventListener("blur", libera);
     sliderEls[k] = { inp, out, u };
     cont.appendChild(d);
   }
 }
 function sincronizarControles() {
   for (const [k, { inp, out, u }] of Object.entries(sliderEls)) {
-    const v = k === "presionDisponible" ? planta.presionDisponible : tab[k];
+    const v = objetoDe(k)[k];
     if (document.activeElement !== inp) inp.value = v;
     out.textContent = `${coma(v)} ${u}`;
   }
@@ -597,7 +699,7 @@ function actualizarEventos() {
     vistos.add(e.linea); lista.push(e);
   }
   $("#eventos").innerHTML = lista.map((e, k) =>
-    `<div class="ev${k === 0 ? " nuevo" : ""}"><b>Línea ${e.linea}</b> → <span class="${e.valor ? "on" : "off"}">${nombreDisp(e.dispositivo)} = ${e.valor ? 1 : 0}</span>` +
+    `<div class="ev${k === 0 ? " nuevo" : ""}" data-linea="${e.linea}" title="Ver en Ladder"><b>Línea ${e.linea}</b> → <span class="${e.valor ? "on" : "off"}">${nombreDisp(e.dispositivo)} = ${e.valor ? 1 : 0}</span>` +
     `<span style="color:var(--tenue)"> · ${PROG.comentarios[e.linea] || ""}</span><code>${PROG.textoLinea(e.linea)}</code></div>`).join("");
 }
 
@@ -622,11 +724,11 @@ const PRUEBAS = [
     () => y("H14") && y("HA1")],
   ["Pulsa S52 (reset).", "La bocina se calla; H14 sigue mientras dure la falla.", "56–58",
     () => y("H14") && !y("HA1") && ocurrio("M46")],
-  ["Con T-3702 bajo 70 %, pulsa S51.", "Abre VA-09; se cierra sola al 80 % y ese nivel alto detiene G1 (H10).",
-    "53, 61–63, 13", () => ocurrio("Y025") && ocurrio("Y025", false) && y("H10")],
+  ["Con T-3702 bajo 70 %, pulsa S51 (con proceso automático usa x60: el relleno tarda unos minutos).", "Abre VA-09; se cierra sola al 80 % y ese nivel alto detiene G1 (H10).",
+    "53, 61–63, 13", () => ocurrio("Y025") && ocurrio("Y025", false) && ocurrio("Y031")],
   ["Lleva T-3702 bajo 15 %.", "H9, G3 bloqueado y reposición automática con VA-09 hasta 50 %.", "25, 52, 59, 60, 63",
     () => y("H9") && y("VA-09") && plc.bit("M32")],
-  ["Sube la temperatura de T-3701 a 50 °C o más y espera 5 min (usa x60).", "Se encienden H11 y la bocina.", "54, 55, 58",
+  ["Provoca alta temperatura en T-3701: simula la falla del ventilador y sube la carga del condensador, con x60 (o apaga el proceso automático y deja TIT-01 en 50 °C o más). Debe sostenerse 5 min.", "Se encienden H11 y la bocina.", "54, 55, 58",
     () => y("H11")],
   ["Enclava la emergencia general S00.", "Se detiene todo; al desenclavar no parte solo.", "7, 8",
     () => tab.accionado("S00") && !y("H12") && ["P-3701A", "P-3701B", "P-3702C", "P-3702D", "P-3702E", "P-3702F"].every((b) => !y(b))],
@@ -674,6 +776,217 @@ $("#sonido").addEventListener("click", () => {
   if (ctxAudio && ctxAudio.state === "suspended") ctxAudio.resume();
 });
 
+// ------------------------------------------------------------------ tendencias
+const SERIES = { t1: "#3987e5", t2: "#d95926", p: "#199e70" };   // validado: 3 tonos, modo oscuro
+const PERIODO_MUESTRA = 500;            // ms simulados entre muestras
+const MAX_MUESTRAS = 3600 * 2 + 10;     // 60 min
+let muestras = [], proximaMuestra = 0, ventana = 600, ultimoDibujoTend = 0, hoverX = null;
+const ALARMAS = [["H7", "nivel bajo T-3701"], ["H8", "nivel alto T-3701"], ["H9", "nivel bajo T-3702"],
+  ["H10", "nivel alto T-3702"], ["H11", "alta temp. T-3701"], ["H14", "baja presión"]];
+function reiniciarTendencias() { muestras = []; proximaMuestra = 0; }
+function muestrear() {
+  if (plc.tMs < proximaMuestra) return;
+  proximaMuestra = plc.tMs + PERIODO_MUESTRA;
+  muestras.push({
+    t: plc.tMs / 1000, n1: tab.nivelT1, n2: tab.nivelT2, t1: tab.tempT1, t2: tab.tempT2, p: tab.presion,
+    g1: y("P-3701A") || y("P-3701B"), g2: y("P-3702C") || y("P-3702D"), g3: y("P-3702E") || y("P-3702F"),
+    va09: y("VA-09"), al: ALARMAS.filter(([h]) => y(h)).map(([h]) => h),
+  });
+  if (muestras.length > MAX_MUESTRAS) muestras.splice(0, muestras.length - MAX_MUESTRAS);
+}
+for (const b of document.querySelectorAll("#ventana button")) {
+  b.addEventListener("click", () => {
+    ventana = parseFloat(b.dataset.w);
+    for (const o of document.querySelectorAll("#ventana button")) o.classList.toggle("sel", o === b);
+    dibujarTendencias();
+  });
+}
+const lienzo = $("#tend");
+lienzo.addEventListener("pointermove", (e) => { hoverX = e.offsetX; dibujarTendencias(); });
+lienzo.addEventListener("pointerleave", () => { hoverX = null; $("#tip").style.display = "none"; dibujarTendencias(); });
+const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+function dibujarTendencias() {
+  const dpr = window.devicePixelRatio || 1;
+  const W = lienzo.clientWidth, H = lienzo.clientHeight;
+  if (lienzo.width !== Math.round(W * dpr)) { lienzo.width = Math.round(W * dpr); lienzo.height = Math.round(H * dpr); }
+  const c = lienzo.getContext("2d");
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.clearRect(0, 0, W, H);
+  const izq = 52, der = 96, ancho = W - izq - der;
+  const tFin = Math.max(ventana, plc.tMs / 1000), tIni = tFin - ventana;
+  const X = (t) => izq + (t - tIni) / ventana * ancho;
+  const vis = muestras.filter((m) => m.t >= tIni - 1);
+  const TXT = "#e2e8f0", TENUE = "#8a98af", GRID = "#2a3650";
+  c.font = '12px "Segoe UI", system-ui, sans-serif';
+
+  // tres gráficos con su propio eje (nunca dos escalas en un mismo eje)
+  const graficos = [
+    { titulo: "Nivel (%)", min: 0, max: 100, ref: [[15, "15 %"], [80, "80 %"]], ser: [["n1", SERIES.t1, "T-3701"], ["n2", SERIES.t2, "T-3702"]], u: "%" },
+    { titulo: "Temperatura (°C)", min: 0, max: 100, ref: [[25, "25 °C", true], [40, "40 °C", true], [50, "50 °C"]], ser: [["t1", SERIES.t1, "T-3701"], ["t2", SERIES.t2, "T-3702"]], u: "°C" },
+    { titulo: "Presión PIT-01 (bar)", min: 0, max: 16, ref: [[8, "8 bar"]], ser: [["p", SERIES.p, "PIT-01"]], u: "bar" },
+  ];
+  const altoG = 112, sep = 16;
+  let y0 = 8;
+  for (const g of graficos) {
+    const Y = (v) => y0 + altoG - (v - g.min) / (g.max - g.min) * altoG;
+    c.strokeStyle = GRID; c.lineWidth = 1;
+    for (let k = 0; k <= 4; k++) {
+      const v = g.min + (g.max - g.min) * k / 4, yy = Math.round(Y(v)) + 0.5;
+      c.beginPath(); c.moveTo(izq, yy); c.lineTo(izq + ancho, yy); c.stroke();
+      c.fillStyle = TENUE; c.textAlign = "right"; c.textBaseline = "middle"; c.fillText(String(Math.round(v)), izq - 6, yy);
+    }
+    c.setLineDash([4, 4]); c.strokeStyle = "#5b6880";
+    for (const [v, et, abajo] of g.ref) {
+      const yy = Math.round(Y(v)) + 0.5;
+      c.beginPath(); c.moveTo(izq, yy); c.lineTo(izq + ancho, yy); c.stroke();
+      c.fillStyle = TENUE; c.textAlign = "right"; c.textBaseline = abajo ? "top" : "bottom";
+      c.fillText(et, izq + ancho - 4, abajo ? yy + 2 : yy - 1);
+      c.textBaseline = "middle";
+    }
+    c.setLineDash([]);
+    c.fillStyle = TXT; c.textAlign = "left"; c.textBaseline = "top"; c.font = '600 12px "Segoe UI", system-ui, sans-serif';
+    c.fillText(g.titulo, izq + 6, y0 + 2);
+    c.font = '12px "Segoe UI", system-ui, sans-serif';
+    // series
+    const rotulos = [];
+    for (const [k, col, nombre] of g.ser) {
+      c.strokeStyle = col; c.lineWidth = 2; c.lineJoin = "round"; c.beginPath();
+      vis.forEach((m, i) => { const xx = X(m.t), yy = Y(Math.max(g.min, Math.min(g.max, m[k]))); i ? c.lineTo(xx, yy) : c.moveTo(xx, yy); });
+      c.stroke();
+      if (vis.length) {
+        const m = vis[vis.length - 1];
+        rotulos.push({ y: Y(Math.max(g.min, Math.min(g.max, m[k]))), col, txt: `${nombre} ${coma(m[k])}` });
+      }
+    }
+    // rótulos directos al final de cada línea, separados para que no se pisen
+    rotulos.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < rotulos.length; i++) if (rotulos[i].y - rotulos[i - 1].y < 14) rotulos[i].y = rotulos[i - 1].y + 14;
+    for (const r of rotulos) {
+      c.fillStyle = r.col; c.fillRect(izq + ancho + 4, r.y - 1, 10, 3);
+      c.fillStyle = TXT; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(r.txt, izq + ancho + 17, r.y);
+    }
+    y0 += altoG + sep;
+  }
+  // bandas de estado
+  const bandas = [["G1 en marcha", "g1", "#22c55e"], ["G2 en marcha", "g2", "#22c55e"], ["G3 en marcha", "g3", "#22c55e"],
+    ["VA-09 abierta", "va09", "#3b82f6"]];
+  const altoB = 13;
+  c.textBaseline = "middle";
+  for (const [et, k, col] of bandas) {
+    c.fillStyle = "#1f2a40"; c.fillRect(izq, y0, ancho, altoB);
+    c.fillStyle = col;
+    let ini = null;
+    vis.forEach((m, i) => {
+      if (m[k] && ini === null) ini = m.t;
+      if ((!m[k] || i === vis.length - 1) && ini !== null) { const x1 = Math.max(izq, X(ini)); c.fillRect(x1, y0 + 2, X(m.t) - x1, altoB - 4); ini = null; }
+    });
+    c.fillStyle = TENUE; c.textAlign = "right"; c.font = '11px "Segoe UI", system-ui, sans-serif'; c.fillText(et.split(" ")[0], izq - 6, y0 + altoB / 2);
+    y0 += altoB + 3;
+  }
+  // alarmas: franja roja con el nombre de la alarma al comenzar
+  c.fillStyle = "#1f2a40"; c.fillRect(izq, y0, ancho, altoB + 4);
+  c.fillStyle = TENUE; c.textAlign = "right"; c.fillText("Alarmas", izq - 6, y0 + (altoB + 4) / 2);
+  let previo = [];
+  vis.forEach((m, i) => {
+    if (m.al.length) {
+      const x2 = i + 1 < vis.length ? X(vis[i + 1].t) : X(m.t) + 1;
+      c.fillStyle = "#ef4444aa"; c.fillRect(Math.max(izq, X(m.t)), y0 + 2, x2 - Math.max(izq, X(m.t)), altoB);
+    }
+    for (const a of m.al) if (!previo.includes(a) && X(m.t) >= izq) {
+      c.fillStyle = TXT; c.textAlign = "left"; c.font = '600 11px "Segoe UI", system-ui, sans-serif';
+      c.fillText(a, X(m.t) + 3, y0 + (altoB + 4) / 2);
+    }
+    previo = m.al;
+  });
+  y0 += altoB + 10;
+  // eje de tiempo
+  c.fillStyle = TENUE; c.textAlign = "center"; c.textBaseline = "top"; c.font = '11px "Segoe UI", system-ui, sans-serif';
+  const paso = [10, 30, 60, 120, 300, 600][[120, 600, 1800, 3600, 7200, 1e9].findIndex((v) => ventana <= v * 1.01) + 1] || 600;
+  for (let t = Math.ceil(tIni / paso) * paso; t <= tFin; t += paso) c.fillText(mmss(t), X(t), y0);
+
+  // cursor y tooltip
+  const tip = $("#tip");
+  if (hoverX !== null && hoverX >= izq && hoverX <= izq + ancho && vis.length) {
+    const t = tIni + (hoverX - izq) / ancho * ventana;
+    let m = vis[0];
+    for (const q of vis) if (Math.abs(q.t - t) < Math.abs(m.t - t)) m = q;
+    const xx = Math.round(X(m.t)) + 0.5;
+    c.strokeStyle = "#cbd5e1"; c.lineWidth = 1; c.beginPath(); c.moveTo(xx, 4); c.lineTo(xx, y0 - 6); c.stroke();
+    const grupos = ["g1", "g2", "g3"].filter((k) => m[k]).map((k) => k.toUpperCase()).join(", ") || "ninguno";
+    tip.innerHTML = `<b>${mmss(m.t)}</b> (tiempo simulado)<br>` +
+      `<i style="background:${SERIES.t1}"></i>T-3701: <b>${coma(m.n1)} %</b> · <b>${coma(m.t1)} °C</b><br>` +
+      `<i style="background:${SERIES.t2}"></i>T-3702: <b>${coma(m.n2)} %</b> · <b>${coma(m.t2)} °C</b><br>` +
+      `<i style="background:${SERIES.p}"></i>Presión: <b>${coma(m.p)} bar</b><br>` +
+      `Grupos en marcha: <b>${grupos}</b>${m.va09 ? " · VA-09 abierta" : ""}<br>` +
+      `Alarmas: <b>${m.al.length ? m.al.map((a) => a + " " + ALARMAS.find((x) => x[0] === a)[1]).join(", ") : "ninguna"}</b>`;
+    tip.style.display = "block";
+    const tw = tip.offsetWidth;
+    tip.style.left = `${xx + 14 + tw > W ? xx - tw - 14 : xx + 14}px`;
+    tip.style.top = "10px";
+  } else tip.style.display = "none";
+}
+
+// ------------------------------------------------------------------ ladder
+const LAD = window.LadderPLC;
+const CIRCUITOS = LAD.construirCircuitos(PROG);
+const ANCHO_LOGICA = LAD.anchoMaximo(CIRCUITOS);
+const rungs = [];          // {linea, div, svg, actualizar, visible}
+let ultimoLadder = 0, ultimoSeguir = 0;
+function crearLadder() {
+  const cont = $("#ladder"), sel = $("#irA");
+  const secc = LAD.secciones(PROGRAMA_IL);
+  sel.innerHTML = `<option value="">Ir a la línea…</option>`;
+  const obs = new IntersectionObserver((ents) => { for (const e of ents) e.target._rung.visible = e.isIntersecting; },
+    { root: cont, rootMargin: "100px" });
+  let grupo = null;
+  for (const circ of CIRCUITOS) {
+    const s = secc.find((x) => x.linea === circ.linea);
+    if (s) {
+      const h = document.createElement("h4"); h.textContent = s.titulo; cont.appendChild(h);
+      grupo = document.createElement("optgroup"); grupo.label = s.titulo; sel.appendChild(grupo);
+    }
+    const d = LAD.dibujarCircuito(circ, M, ANCHO_LOGICA, PROG);
+    const div = document.createElement("div");
+    div.className = "rung-w"; div.id = "rung" + circ.linea; div.innerHTML = d.svgTxt;
+    cont.appendChild(div);
+    const r = { linea: circ.linea, div, svg: div.firstChild, actualizar: d.actualizar, visible: false };
+    div._rung = r; rungs.push(r); obs.observe(div);
+    const o = document.createElement("option");
+    o.value = circ.linea; o.textContent = `Línea ${circ.linea} · ${(PROG.comentarios[circ.linea] || "").slice(0, 60)}`;
+    (grupo || sel).appendChild(o);
+  }
+  sel.addEventListener("change", () => { if (sel.value !== "") irALinea(parseInt(sel.value, 10)); sel.value = ""; });
+}
+function irALinea(n, suave = true) {
+  const r = rungs.find((x) => x.linea === n);
+  if (!r) return;
+  const cont = $("#ladder");
+  cont.scrollTo({ top: r.div.offsetTop - cont.offsetTop - 30, behavior: suave ? "smooth" : "auto" });
+  r.div.classList.remove("flash"); void r.div.offsetWidth; r.div.classList.add("flash");
+}
+function actualizarLadder(ts) {
+  if (ts - ultimoLadder < 60) return;
+  ultimoLadder = ts;
+  for (const r of rungs) if (r.visible) {
+    r.actualizar(r.svg, plc);
+    r.div.classList.toggle("activa", (lineaActiva[r.linea] || -9) > ts / 1000 - 0.9);
+  }
+  if ($("#seguir").checked && ts - ultimoSeguir > 1200 && plc.eventos.length) {
+    const e = plc.eventos[plc.eventos.length - 1];
+    if (e.dispositivo[0] !== "X" && (ts / 1000 - (lineaActiva[e.linea] || 0)) < 1.5) { irALinea(e.linea); ultimoSeguir = ts; }
+  }
+}
+// clic en el monitor o en el programa IL → saltar al Ladder
+$("#eventos").addEventListener("click", (e) => {
+  const ev = e.target.closest(".ev[data-linea]");
+  if (ev) { irALinea(parseInt(ev.dataset.linea, 10)); $("#pLadder").scrollIntoView({ behavior: "smooth", block: "start" }); }
+});
+$("#programa").addEventListener("click", (e) => {
+  const ln = e.target.closest(".ln");
+  if (ln) { irALinea(parseInt(ln.id.slice(2), 10)); $("#pLadder").scrollIntoView({ behavior: "smooth", block: "start" }); }
+});
+
 // ------------------------------------------------------------------ bucle
 let velocidad = 1, acumulado = 0, tAnterior = null;
 for (const b of document.querySelectorAll("#vel button")) {
@@ -703,6 +1016,7 @@ function cuadro(ts) {
   const lineasCuadro = new Set();
   while (acumulado >= plc.scanMs && n < 20000) {
     planta.paso(plc.scanMs / 1000);
+    proceso.paso(plc.scanMs / 1000);
     tab.escribirAnalogicas();
     const antes = plc.eventos.length;
     plc.scan();
@@ -712,6 +1026,7 @@ function cuadro(ts) {
     }
     for (const l of plc.lineasScan) lineasCuadro.add(l);
     acumulado -= plc.scanMs; n++;
+    muestrear();
   }
   // vistas
   for (const f of vistas) f();
@@ -728,18 +1043,25 @@ function cuadro(ts) {
   const s = plc.tMs / 1000;
   $("#reloj").textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${coma(s % 60).padStart(4, "0")}`;
   if (velocidad === 0) $("#reloj").textContent += " (pausa)";
-  // el nivel de T-3702 lo mueve VA-09: reflejarlo en su deslizador
-  const s2 = sliderEls.nivelT2;
-  if (document.activeElement !== s2.inp) { s2.inp.value = tab.nivelT2; s2.out.textContent = `${coma(tab.nivelT2)} %`; }
+  // niveles y temperaturas cambian solos (VA-09 o proceso automático): reflejarlo en los deslizadores
+  for (const k of ["nivelT1", "nivelT2", "tempT1", "tempT2"]) {
+    const sl = sliderEls[k];
+    if (!proceso.bloqueados.has(k)) sl.inp.value = tab[k];
+    sl.out.textContent = `${coma(tab[k])} ${sl.u}`;
+  }
+  if (ts - ultimoDibujoTend > 120) { dibujarTendencias(); ultimoDibujoTend = ts; }
+  actualizarLadder(ts);
   revisarPruebas();
   actualizarSonido(tReal);
   requestAnimationFrame(cuadro);
 }
 
+$("#auto").addEventListener("change", (e) => aplicarModo(e.target.checked));
 crearSliders();
 crearTablero();
 crearMonitor();
 crearPruebas();
+crearLadder();
 iniciar();
 dibujarPlanta();
 requestAnimationFrame(cuadro);

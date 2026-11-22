@@ -23,7 +23,7 @@ cómo responde.
 | `narracion/guion_locucion.md` | Todas las frases de la narración, con su identificador y su minuto en el video. |
 | `capturas/` | Capturas PNG de cada escena: una 2 s después de cada paso del guion, más la portada y el cierre. |
 | `simulador_interactivo.html` | **Simulador interactivo**: una sola página que se abre con doble clic, sin instalar nada ni usar internet. |
-| `interactivo/` | Motor en JavaScript (`motor_plc.js`) y diseño de la página (`plantilla.html`). |
+| `interactivo/` | Motor en JavaScript (`motor_plc.js`), Ladder (`ladder.js`), proceso automático (`proceso.js`) y diseño de la página (`plantilla.html`). |
 | `construir_interactivo.py` | Arma `simulador_interactivo.html` con el IL y el motor adentro. |
 | `tests/test_motor_js.py` | Comprueba que el motor JavaScript da el mismo estado que el de Python en cada scan. |
 
@@ -67,6 +67,21 @@ un pendrive.
   IL* muestra las 68 líneas, que se iluminan cuando actúan. *Pruebas guiadas* tiene 14 pruebas del
   plan de la Memoria que se marcan solas cuando el PLC hace lo esperado.
 - **Bocina:** el botón 🔇/🔊 enciende el sonido de HA1.
+- **Proceso automático** (activado por defecto): los niveles y las temperaturas cambian solos según
+  lo que el PLC tiene en marcha. G1 vacía T-3701 hacia la torre o el by-pass, G3 calienta el agua en
+  el condensador y la devuelve a T-3701, la torre enfría más con el ventilador que sin él, G2
+  recircula y VA-09 repone. Así se ven cadenas completas, por ejemplo: falla del ventilador → sube la
+  temperatura → parte G2 y se activa KA1 → alarma H11. Es un modelo simplificado (5 m³ por estanque,
+  30 m³/h por grupo, 15 m³/h con KA1) y no son datos de la planta. Igual se pueden mover los
+  deslizadores para provocar un caso.
+- **Tendencias:** son tres gráficos con el mismo eje de tiempo (nivel, temperatura y presión, cada
+  uno con su escala), con bandas de G1, G2, G3 y VA-09, franjas de alarmas, ventanas de 2 a 60 min y
+  un cursor que muestra todos los valores de ese instante.
+- **Ladder en vivo:** las 68 líneas se dibujan en escalera a partir del IL. En verde se ve por dónde
+  pasa la corriente según lo que el PLC evaluó en el último scan, como el monitor de GX Works2. Los
+  temporizadores muestran su cuenta. Se puede saltar a una línea, seguir la que acaba de actuar o
+  hacer clic en un evento del monitor. La prueba `tests/test_ladder_js.py` comprueba que el Ladder
+  equivale al IL: 300 combinaciones al azar por línea, sin diferencias.
 
 La página no tiene la lógica escrita a mano. Lleva adentro el mismo `Programa_IL_GXWorks2.txt` y
 lo ejecuta `interactivo/motor_plc.js`, que es una traducción directa de `simulador.py`. La prueba

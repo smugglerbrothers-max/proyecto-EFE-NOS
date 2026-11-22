@@ -114,6 +114,8 @@
       this.eventos = [];        // {tMs, linea, dispositivo, valor}
       this.lineasScan = new Set();
       this.maxEventos = 4000;
+      // Monitor: lo que evaluó cada contacto/comparación en el último scan (para el Ladder en vivo).
+      this.vistoContacto = new Uint8Array(programa.instrucciones.length);
     }
 
     bit(n) { return !!this.bits[n]; }
@@ -155,13 +157,15 @@
 
     contacto(ins) {
       const op = ins.op, v = this.leerBit(ins.args[0]);
+      let r;
       if (op === "LDP" || op === "ORP" || op === "ANDP") {
         const previo = !!this.flancos[ins.indice];
         this.flancos[ins.indice] = v;
-        return v && !previo;
-      }
-      if (op === "LDI" || op === "ANI" || op === "ORI") return !v;
-      return v;
+        r = v && !previo;
+      } else if (op === "LDI" || op === "ANI" || op === "ORI") r = !v;
+      else r = v;
+      this.vistoContacto[ins.indice] = r ? 1 : 0;
+      return r;
     }
 
     temporizador(n, k, entrada, linea) {
@@ -184,6 +188,7 @@
         const m = op.match(RE_COMPARACION);
         if (m) {
           const r = COMPARA[m[2]](this.valor(a[0]), this.valor(a[1]));
+          this.vistoContacto[ins.indice] = r ? 1 : 0;
           if (m[1] === "LD") { pila.push(acc); acc = r; }
           else if (m[1] === "AND") acc = acc && r;
           else acc = acc || r;
