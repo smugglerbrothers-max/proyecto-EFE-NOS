@@ -22,6 +22,10 @@ cómo responde.
 | `video_simulacion_PLC_torre.srt` | Subtítulos aparte, por si el reproductor los pide. |
 | `narracion/guion_locucion.md` | Todas las frases de la narración, con su identificador y su minuto en el video. |
 | `capturas/` | Capturas PNG de cada escena: una 2 s después de cada paso del guion, más la portada y el cierre. |
+| `simulador_interactivo.html` | **Simulador interactivo**: una sola página que se abre con doble clic, sin instalar nada ni usar internet. |
+| `interactivo/` | Motor en JavaScript (`motor_plc.js`) y diseño de la página (`plantilla.html`). |
+| `construir_interactivo.py` | Arma `simulador_interactivo.html` con el IL y el motor adentro. |
+| `tests/test_motor_js.py` | Comprueba que el motor JavaScript da el mismo estado que el de Python en cada scan. |
 
 ## Cómo volver a generarlo
 
@@ -45,6 +49,31 @@ python render.py --solo-capturas   # solo las PNG, en ~10 s
 
 Si falta el modelo de Piper, la narración usa espeak-ng (`apt install espeak-ng`), que suena más
 robótico.
+
+## Simulador interactivo
+
+Abran `simulador_interactivo.html` con Chrome, Edge o Firefox. Funciona sin internet, también desde
+un pendrive.
+
+- **Tablero:** los pulsadores funcionan mientras se mantienen apretados, con el mouse o con el dedo
+  en una pantalla táctil. Los hongos de emergencia y los selectores quedan en su posición con un
+  clic. También hay casillas para simular las fallas de terreno (VDF, PS3/PS4, QM7).
+- **Proceso:** con los deslizadores se cambian el nivel y la temperatura de los dos estanques y la
+  presión que entrega G3. T-3702 se llena solo cuando VA-09 está abierta.
+- **Tiempo:** Pausa, x1, x5, x10 y x60. Con x60 la alarma de 5 minutos de alta temperatura llega
+  en 5 segundos.
+- **Monitor:** tiene tres pestañas. *Estado* muestra las entradas X, las salidas Y, los valores
+  analógicos crudos y escalados, los temporizadores y las líneas que acaban de actuar. *Programa
+  IL* muestra las 68 líneas, que se iluminan cuando actúan. *Pruebas guiadas* tiene 14 pruebas del
+  plan de la Memoria que se marcan solas cuando el PLC hace lo esperado.
+- **Bocina:** el botón 🔇/🔊 enciende el sonido de HA1.
+
+La página no tiene la lógica escrita a mano. Lleva adentro el mismo `Programa_IL_GXWorks2.txt` y
+lo ejecuta `interactivo/motor_plc.js`, que es una traducción directa de `simulador.py`. La prueba
+`tests/test_motor_js.py` corre los dos motores con más de 60 mil scans de entradas al azar que
+cruzan todos los umbrales del programa y exige el mismo estado en cada scan (bits, registros D,
+temporizadores y líneas que actuaron). Si cambian el IL, vuelvan a armar la página con
+`python construir_interactivo.py`. Si se les olvida, una prueba de pytest lo avisa.
 
 ## Narración con voz propia
 
@@ -79,7 +108,8 @@ se cumple.
 - **Scan:** cada 10 ms simulados. Primero se toma la imagen de entradas y luego se ejecuta en orden
   de línea. M8000 está siempre en ON, M8002 se activa solo en el primer scan y M8013 es el reloj de 1 s.
 - **Flancos:** LDP, ORP, ANDP y PLS guardan memoria propia por instrucción. Comparan con el valor
-  del scan anterior, así que el pulso dura un solo ciclo.
+  del scan anterior, así que el pulso dura un solo ciclo. Como en el FX, ANDP y ORP actualizan su
+  memoria en cada scan, aunque el resto de la serie ya esté abierta.
 - **Temporizadores:** T0 a T199 son de 100 ms y funcionan a la conexión. `K30` = 3,0 s,
   `K300` = 30 s y `K3000` = 5 min. Si la entrada cae, el temporizador se repone.
 - **Aritmética de 16 bits como en el FX:** MUL deja el producto en D y D+1; DIV deja el cociente

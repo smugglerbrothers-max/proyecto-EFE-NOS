@@ -242,3 +242,30 @@ def test_alta_temperatura_T3701_5_minutos(t):
     assert t.y("H11") and t.y("HA1")
     t.pulsar("S52")
     assert t.y("H11") and not t.y("HA1")
+
+
+def test_flanco_ANDP_actualiza_memoria_aunque_la_serie_este_abierta():
+    """En el FX, ANDP/ORP refrescan su memoria en cada scan, aunque el resultado ya esté decidido."""
+    from simulador import Instruccion, Programa
+    prog = Programa([
+        Instruccion("LD", ["X000"], 0, 0),
+        Instruccion("ANDP", ["X001"], 0, 1),
+        Instruccion("OUT", ["M0"], 0, 2),
+        Instruccion("END", [], 1, 3),
+    ])
+    plc = PLC(prog)
+    plc.entradas = {"X000": False, "X001": True}   # X001 sube con la serie abierta
+    plc.scan()
+    plc.entradas["X000"] = True                    # luego se cierra X000: ya no hay flanco
+    plc.scan()
+    assert not plc.bit("M0")
+
+
+def test_totalizador_suma_una_vez_por_segundo(t):
+    partida(t)
+    t.fijar(nivel_t2=60, caudal=12)
+    t.pulsar("S51")
+    t.correr(9.7)                     # 10 s con VA-09 abierta
+    D = t.plc.D
+    total = ((D.get(301, 0) & 0xFFFF) << 16) | (D.get(300, 0) & 0xFFFF)
+    assert total == 120 * 10          # 12,0 m³/h (D112 = 120) sumado 10 veces

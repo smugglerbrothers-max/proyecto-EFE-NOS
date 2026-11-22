@@ -293,9 +293,11 @@ class PLC:
                 pila.append(acc)
                 acc = self._contacto(ins)
             elif op in ("AND", "ANI", "ANDP"):
-                acc = acc and self._contacto(ins)
+                c = self._contacto(ins)        # se evalúa siempre: los flancos actualizan su memoria
+                acc = acc and c
             elif op in ("OR", "ORI", "ORP"):
-                acc = acc or self._contacto(ins)
+                c = self._contacto(ins)
+                acc = acc or c
             elif op == "ANB":
                 acc = pila.pop() and acc
             elif op == "ORB":
