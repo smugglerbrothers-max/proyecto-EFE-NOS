@@ -11,10 +11,15 @@ export function descargar(nombre: string, blob: Blob) {
   const a = document.createElement('a');
   a.href = url;
   a.download = nombre;
+  document.body.appendChild(a);
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setTimeout(() => {
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
-export const nombreArchivo = (s: string) => s.trim().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'proyecto';
+export const nombreArchivo = (s: string) =>
+  s.normalize('NFD').replace(/\p{M}/gu, '').trim().replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'proyecto';
 
 export function Encabezado({ almacen, estadoGuardado, onPDF }: { almacen: Almacen; estadoGuardado: string; onPDF?: () => void }) {
   const [verLista, setVerLista] = useState(false);

@@ -8,6 +8,7 @@ import { Diferenciales } from './ui/Diferenciales';
 import { Encabezado } from './ui/Encabezado';
 import { PanelResumen } from './ui/PanelResumen';
 import { TablaCircuitos } from './ui/TablaCircuitos';
+import { descargar, nombreArchivo } from './ui/Encabezado';
 import './ui/estilos.css';
 
 const CLAVE_ULTIMO = 'calculadora-ric:ultimo';
@@ -41,7 +42,18 @@ export default function App({ almacen = almacenIndexedDB, inicial }: { almacen?:
 
   return (
     <div className="app">
-      <Encabezado almacen={almacen} estadoGuardado={estado} />
+      <Encabezado
+        almacen={almacen}
+        estadoGuardado={estado}
+        onPDF={async () => {
+          const { generarPDF } = await import('./informes/pdf');
+          try {
+            descargar(`${nombreArchivo(p.nombre)}.pdf`, await generarPDF(p, r));
+          } catch (e) {
+            alert(`No se pudo generar el PDF: ${(e as Error).message}`);
+          }
+        }}
+      />
       <div className="cuerpo">
         <main>
           <ConfigProyecto />
