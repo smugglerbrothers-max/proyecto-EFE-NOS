@@ -62,3 +62,5 @@ table.circuitos { border-collapse: collapse; font-size: .75rem; min-width: 1500p
   .panel { position: static; }
   .solo-escritorio { display: none; } .solo-movil { display: block; }
 }
+.unilineal { overflow: auto; } .unilineal svg { display: block; max-width: none; height: auto; }
+@media (min-width: 901px) { .unilineal svg { width: 100%; min-width: 900px; } }

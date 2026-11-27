@@ -32,6 +32,12 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: '+ Iluminación' }));
     expect(screen.getByTestId('panel-resumen').textContent).toContain('RIC N°10 5.1.3.7');
   });
+  test('muestra el diagrama unilineal en pantalla', () => {
+    render(<App almacen={almacenMemoria()} inicial={proyectoEjemplo()} />);
+    const sec = screen.getByTestId('unilineal');
+    expect(sec.querySelector('svg')).not.toBeNull();
+    expect(sec.textContent).toContain('DIAGRAMA UNILINEAL');
+  });
   test('editar portalámparas recalcula la potencia instalada', () => {
     render(<App almacen={almacenMemoria()} inicial={proyectoEjemplo()} />);
     const campo = screen.getAllByLabelText('Portalámparas cto 1')[0] as HTMLInputElement;

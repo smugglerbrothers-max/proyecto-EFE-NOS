@@ -8,6 +8,7 @@ import { Diferenciales } from './ui/Diferenciales';
 import { Encabezado } from './ui/Encabezado';
 import { PanelResumen } from './ui/PanelResumen';
 import { TablaCircuitos } from './ui/TablaCircuitos';
+import { Unilineal } from './ui/Unilineal';
 import { descargar, nombreArchivo } from './ui/Encabezado';
 import './ui/estilos.css';
 
@@ -59,6 +60,7 @@ export default function App({ almacen = almacenIndexedDB, inicial }: { almacen?:
           <ConfigProyecto />
           <Diferenciales r={r} />
           <TablaCircuitos r={r} />
+          <Unilineal r={r} />
         </main>
         <PanelResumen r={r} />
       </div>

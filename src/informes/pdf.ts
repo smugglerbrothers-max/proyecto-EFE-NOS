@@ -72,7 +72,7 @@ export function definicionPDF(p: Proyecto, r: ResultadoProyecto, svg: string): T
         layout: TABLA_COMPACTA,
       },
       { text: 'Diagrama Unilineal — Tablero General', style: 'subtitulo', pageBreak: 'before' },
-      { svg, fit: [732, 480] },
+      { svg, fit: [732, 520], alignment: 'center' },
       { text: 'Memoria de cálculo', style: 'subtitulo', pageBreak: 'before' },
       ...memo.flatMap((s): Content[] => [
         { text: s.titulo, bold: true, margin: [0, 8, 0, 3], color: AZUL },
