@@ -45,6 +45,7 @@ export function memoria(p: Proyecto, r: ResultadoProyecto): SeccionMemoria[] {
       { formula: tri ? 'Ib = D / (√3·380·cos φ)' : 'Ib = D / (220·cos φ)', datos: `cos φ = ${num(p.cosPhi)}`, resultado: `${num(a.ib)} A → protección ${a.in ?? '—'} A`, fuente: 'RIC N°03 5.2.2; RIC N°10 5.2 (mín. 25 A vivienda)' },
       { formula: 'Iz ≥ In y ΔV ≤ 3 %; S ≥ 4 mm²', datos: `L = ${num(p.longitudAlimentador, 1)} m, ${p.conductorAlimentador}, método ${p.metodo}`, resultado: `${secc(a.seccionFase)} mm² (Iz ${num(a.iz, 1)} A), ΔV ${num(a.dvPct)} %`, fuente: 'RIC N°03 5.1.2 / 5.1.3; RIC N°04 Tabla N°4.4' },
       { formula: 'Neutro', datos: tri ? `Cargas no lineales: ${p.noLineales}` : 'Monofásico', resultado: `${secc(a.seccionNeutro)} mm²`, fuente: 'RIC N°03 6.4' },
+      { formula: tri ? 'Icc = U0 / (U0/Icc0 + L·ρ20/S)' : 'Icc = V / (V/Icc0 + 2·L·ρ20/S)', datos: `Icc0 = ${num(p.iccEmpalmeKA, 1)} kA (distribuidora), L = ${num(p.longitudAlimentador, 1)} m`, resultado: `${num(a.iccTG_kA)} kA → Icu general ${num(p.icuGeneralKA, 1)} kA, circuitos ${num(p.icuCircuitosKA, 1)} kA`, fuente: 'RIC N°10 5.1.4.2; IEC 60909 simplificado' },
       { formula: 'Conductor de protección', datos: 'S ≤ 16 → S; 16–35 → 16; > 35 → S/2', resultado: `${secc(a.seccionTierra)} mm²`, fuente: 'IEC 60364-5-54 (verificar con RIC N°06)' },
     ],
   });

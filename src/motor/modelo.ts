@@ -54,6 +54,11 @@ export interface Proyecto {
   noLineales: 'no' | 'concentrado' | 'distribuido';
   /** ρ del cobre: a la temperatura de servicio del conductor o a 20 °C. */
   resistividad: 'servicio' | '20C';
+  /** Corriente de cortocircuito en el punto de empalme [kA] (dato de la distribuidora). */
+  iccEmpalmeKA: number;
+  /** Capacidad de ruptura de la protección general y de las de circuito [kA]. */
+  icuGeneralKA: number;
+  icuCircuitosKA: number;
   diferenciales: Diferencial[];
   circuitos: Circuito[];
   actualizado: string;
@@ -85,6 +90,9 @@ export function proyectoNuevo(): Proyecto {
     subterraneo: false,
     noLineales: 'no',
     resistividad: 'servicio',
+    iccEmpalmeKA: 10,
+    icuGeneralKA: 10,
+    icuCircuitosKA: 6,
     diferenciales: [],
     circuitos: [],
     actualizado: new Date().toISOString(),

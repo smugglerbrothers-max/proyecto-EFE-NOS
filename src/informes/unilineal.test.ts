@@ -48,3 +48,20 @@ describe('unilineal profesional', () => {
     for (const s of [svg, unilinealSVG(q, calcularProyecto(q))]) expect(s).not.toMatch(/NaN|undefined/);
   });
 });
+
+describe('capacidad de ruptura y simbología', () => {
+  const p = proyectoEjemplo();
+  const svg = unilinealSVG(p, calcularProyecto(p));
+  test('protecciones muestran kA y curva', () => {
+    expect(svg).toContain('25 A · 2P · C · 10 kA');
+    expect(svg).toContain('2P · B · 6 kA'); // iluminación
+    expect(svg).toContain('2P · C · 6 kA'); // enchufes
+    expect(svg).toMatch(/Icc TG ≈ \d+,\d+ kA/);
+  });
+  test('simbología en tabla con abreviaturas', () => {
+    expect(svg).toContain('SÍMBOLO');
+    expect(svg).toContain('DESCRIPCIÓN');
+    expect(svg).toContain('ABREVIATURAS');
+    expect(svg).toContain('Icu: capacidad de ruptura');
+  });
+});

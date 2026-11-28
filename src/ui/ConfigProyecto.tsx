@@ -2,6 +2,7 @@ import type { Proyecto } from '../motor/modelo';
 import { useProyecto } from '../estado';
 import { NOMBRE_CONSUMIDOR } from '../motor/tablas/ric03';
 import { CONDUCTORES, DESCRIPCION_METODO, METODOS_POR_AISLACION } from '../motor/tablas/ric04';
+import { CAPACIDADES_RUPTURA_KA } from '../motor/tablas/ric10';
 import type { Metodo, TipoConsumidor } from '../motor/tablas/tipos';
 import { Campo } from './Campo';
 import { leer } from './formato';
@@ -15,7 +16,7 @@ export function ConfigProyecto() {
     </Campo>
   );
   const numero = (
-    k: 'longitudAlimentador' | 'tAmbiente' | 'nViviendas' | 'cosPhi' | 'superficieM2' | 'activosPorDucto',
+    k: 'longitudAlimentador' | 'tAmbiente' | 'nViviendas' | 'cosPhi' | 'superficieM2' | 'activosPorDucto' | 'iccEmpalmeKA',
     etiqueta: string,
     paso = 1,
   ) => (
@@ -105,6 +106,14 @@ export function ConfigProyecto() {
             <option value="concentrado">Con filtro concentrado (neutro ≥ 1,5 × fase)</option>
           </select>
         </Campo>
+        {numero('iccEmpalmeKA', 'Icc en el empalme (kA, distribuidora)', 0.1)}
+        {(['icuGeneralKA', 'icuCircuitosKA'] as const).map((k) => (
+          <Campo key={k} etiqueta={k === 'icuGeneralKA' ? 'Capacidad de ruptura protección general' : 'Capacidad de ruptura protecciones de circuito'}>
+            <select value={p[k]} onChange={(e) => editar({ [k]: Number(e.target.value) })}>
+              {CAPACIDADES_RUPTURA_KA.map((x) => <option key={x} value={x}>{String(x).replace('.', ',')} kA</option>)}
+            </select>
+          </Campo>
+        ))}
         <label className="check"><input type="checkbox" checked={p.reunionPersonas} onChange={(e) => editar({ reunionPersonas: e.target.checked })} /> Recinto de reunión de personas</label>
         <label className="check"><input type="checkbox" checked={p.subterraneo} onChange={(e) => editar({ subterraneo: e.target.checked })} /> Tendido subterráneo</label>
       </div>

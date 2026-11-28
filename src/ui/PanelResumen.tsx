@@ -43,6 +43,7 @@ export function PanelResumen({ r }: { r: ResultadoProyecto }) {
         <Dato k="Tierra (TP)" v={`${secc(a.seccionTierra)} mm²`} />
         <Dato k="Ducto mínimo" v={`Ø ${a.ducto ?? '—'} mm`} />
         <Dato k="ΔV alimentador" v={`${num(a.dvPct)} %`} />
+        <Dato k="Icc en TG" v={`${num(a.iccTG_kA)} kA`} />
       </section>
       <section className="tarjeta">
         <h3>Balance de fases</h3>

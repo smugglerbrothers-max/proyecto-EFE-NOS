@@ -77,6 +77,14 @@ export function auditar(
   ra.errores.forEach((e) => err('Alimentador', e));
   if (ra.dvPct != null && ra.dvPct > LIMITES_DV.alimentador)
     err('RIC N°03 5.1.3', `Alimentador: ΔV ${ra.dvPct.toFixed(2)} % supera ${LIMITES_DV.alimentador} %`);
+  if (ra.iccTG_kA != null) {
+    const icc = ra.iccTG_kA;
+    const f = (x: number) => x.toFixed(2).replace('.', ',');
+    if (p.icuGeneralKA < icc)
+      err('RIC N°10 5.1.4.2', `Protección general: capacidad de ruptura ${p.icuGeneralKA} kA menor que Icc ${f(icc)} kA en el TG`);
+    if (p.circuitos.length && p.icuCircuitosKA < icc)
+      err('RIC N°10 5.1.4.2', `Protecciones de circuitos: capacidad de ruptura ${p.icuCircuitosKA} kA menor que Icc ${f(icc)} kA en el TG`);
+  }
   if (!empalme) err('Empalme', 'Ningún empalme normalizado de la tabla cubre la demanda');
   if (factorTemperatura(p.tAmbiente, aislacionDe(p.conductorAlimentador), p.metodo).fueraDeRango)
     aviso('RIC N°04 Tabla 4.7', `Temperatura ${p.tAmbiente} °C fuera de 5–60 °C: se usa el tramo extremo`);

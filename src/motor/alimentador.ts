@@ -2,7 +2,7 @@ import { V_MONO, V_TRI, aislacionDe, capacidadCorregida, caidaTension, rhoProyec
 import type { ResultadoCircuito } from './circuito';
 import type { Proyecto } from './modelo';
 import { LIMITES_DV, SECCION_MIN_ALIMENTADOR, demandaAlumbrado, factorSimultaneidad } from './tablas/ric03';
-import { SECCIONES, diametroDucto } from './tablas/ric04';
+import { SECCIONES, diametroDucto, resistividadCobre } from './tablas/ric04';
 import { EMPALME_MIN_VIVIENDA_A, PROTECCIONES } from './tablas/ric10';
 
 export interface ResultadoAlimentador {
@@ -18,6 +18,8 @@ export interface ResultadoAlimentador {
   iz: number | null;
   ducto: number | null;
   dvPct: number | null;
+  /** Corriente de cortocircuito estimada en el tablero general [kA]. */
+  iccTG_kA: number | null;
   errores: string[];
 }
 
@@ -30,6 +32,21 @@ export function seccionTierra(fase: number): number | null {
   return siguienteSeccion(fase / 2);
 }
 
+/**
+ * Icc en el tablero general [kA], método de impedancias simplificado:
+ * Zred = U0/Icc0 y el alimentador aporta solo su resistencia a 20 °C (caso más desfavorable).
+ * Monofásico: lazo fase-neutro (2·L). Trifásico: falla trifásica (L) con U0 = 380/√3.
+ */
+export function corrienteCortocircuitoTG(p: Proyecto, seccion: number): number | null {
+  if (!(p.iccEmpalmeKA > 0) || !(seccion > 0)) return null;
+  const tri = p.sistema === 'tri';
+  const u0 = tri ? V_TRI / Math.sqrt(3) : V_MONO;
+  const zRed = u0 / (p.iccEmpalmeKA * 1000);
+  const L = Math.max(0, p.longitudAlimentador || 0);
+  const zAli = ((tri ? 1 : 2) * L * resistividadCobre(20)) / seccion;
+  return u0 / (zRed + zAli) / 1000;
+}
+
 export function calcularAlimentador(p: Proyecto, circuitos: ResultadoCircuito[]): ResultadoAlimentador {
   const errores: string[] = [];
   const nViv = Math.max(1, Math.floor(p.nViviendas || 1));
@@ -40,7 +57,7 @@ export function calcularAlimentador(p: Proyecto, circuitos: ResultadoCircuito[])
   const factorDemanda = potInstalada > 0 ? demanda / potInstalada : 1;
   const base: ResultadoAlimentador = {
     potInstalada, demanda, factorDemanda, fs, ib: null, in: null, seccionFase: null,
-    seccionNeutro: null, seccionTierra: null, iz: null, ducto: null, dvPct: null, errores,
+    seccionNeutro: null, seccionTierra: null, iz: null, ducto: null, dvPct: null, iccTG_kA: null, errores,
   };
   if (!(p.cosPhi > 0 && p.cosPhi <= 1)) {
     errores.push('cos φ inválido');
@@ -76,5 +93,7 @@ export function calcularAlimentador(p: Proyecto, circuitos: ResultadoCircuito[])
   if (seccionFase != null && tri && p.noLineales === 'concentrado') seccionNeutro = siguienteSeccion(seccionFase * 1.5);
   const tierra = seccionFase != null ? seccionTierra(seccionFase) : null;
   const ducto = seccionFase != null ? diametroDucto(seccionFase, tri ? 5 : 3) : null;
-  return { ...base, ib, in: inA, seccionFase, seccionNeutro, seccionTierra: tierra, iz, ducto, dvPct };
+  const iccTG_kA = seccionFase != null ? corrienteCortocircuitoTG(p, seccionFase) : null;
+  if (!(p.iccEmpalmeKA > 0)) errores.push('Icc del empalme inválida: ingresa el dato de la distribuidora');
+  return { ...base, ib, in: inA, seccionFase, seccionNeutro, seccionTierra: tierra, iz, ducto, dvPct, iccTG_kA };
 }

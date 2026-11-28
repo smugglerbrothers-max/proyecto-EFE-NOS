@@ -2,6 +2,7 @@ import type { ResultadoProyecto } from '../motor';
 import { esTrifasico } from '../motor/circuito';
 import type { Proyecto } from '../motor/modelo';
 import { NOMBRE_CONSUMIDOR } from '../motor/tablas/ric03';
+import { curvaSugerida } from '../motor/tablas/ric10';
 import { num, secc } from '../ui/formato';
 
 /* Diagrama unilineal del tablero general como SVG autónomo (símbolos IEC 60617). */
@@ -98,6 +99,7 @@ export function unilinealSVG(p: Proyecto, r: ResultadoProyecto): string {
   s.push(txt(xc + 80, 78, emp ? `${emp.tipos ? emp.tipos + ' · ' : ''}Tarifa ${emp.tarifa}` : 'Sin empalme en tabla', { size: 8 }));
   s.push(txt(xc + 80, 90, tri ? 'Trifásico 380/220 V · 50 Hz' : 'Monofásico 220 V · 50 Hz', { size: 8 }));
   s.push(txt(xc + 80, 102, `Demanda máx. ${num(a.demanda / 1000)} kW`, { size: 8 }));
+  s.push(txt(xc + 80, 114, `Icc empalme ${num(p.iccEmpalmeKA, 1)} kA (distribuidora)`, { size: 8 }));
 
   // ── Alimentador ──
   s.push(trazos(xc, 178, tri ? 5 : 3));
@@ -113,7 +115,8 @@ export function unilinealSVG(p: Proyecto, r: ResultadoProyecto): string {
   s.push(simTM(xc, 268));
   s.push(linea(xc, 308, xc, 330));
   s.push(txt(xc + 14, 284, 'PROTECCIÓN GENERAL', { size: 8, bold: true }));
-  s.push(txt(xc + 14, 296, `${a.in ?? '—'} A · ${tri ? '4P' : '2P'} · Curva C`, { size: 8 }));
+  s.push(txt(xc + 14, 296, `${a.in ?? '—'} A · ${tri ? '4P' : '2P'} · C · ${num(p.icuGeneralKA, p.icuGeneralKA % 1 ? 1 : 0)} kA`, { size: 8 }));
+  s.push(txt(xc + 14, 308, `Icc TG ≈ ${num(a.iccTG_kA)} kA`, { size: 7.5, color: '#555' }));
   const bx0 = Math.min(xc, ...grupos.map((g) => g.cx)) - 10;
   const bx1 = Math.max(xc, ...grupos.map((g) => g.cx)) + 10;
   s.push(linea(bx0, 330, bx1, 330, 4));
@@ -142,7 +145,7 @@ export function unilinealSVG(p: Proyecto, r: ResultadoProyecto): string {
       s.push(linea(x, 402, x, yCol));
       s.push(simTM(x, yCol));
       s.push(txt(x + 7, yCol + 33, `${rc.in ?? '—'} A`, { size: 7.5, bold: true }));
-      s.push(txt(x + 7, yCol + 42, ctri ? '4P' : '2P', { size: 7 }));
+      s.push(txt(x + 7, yCol + 42, `${ctri ? '4P' : '2P'} · ${curvaSugerida(c.tipo)} · ${num(p.icuCircuitosKA, p.icuCircuitosKA % 1 ? 1 : 0)} kA`, { size: 7 }));
       s.push(linea(x, yCol + 40, x, yFin));
       s.push(trazos(x, yT1 + 12, ctri ? 5 : 3));
       s.push(flecha(x, yFin));
@@ -158,26 +161,49 @@ export function unilinealSVG(p: Proyecto, r: ResultadoProyecto): string {
   s.push(txt(x0 - 30, yT1 + 14, 'TP', { size: 8, bold: true, anchor: 'middle' }));
   s.push(txt(x0 + 4, yT1 - 23, `Barra TP · ${secc(a.seccionTierra)} mm²`, { size: 7, color: '#555' }));
 
-  // ── Panel derecho: simbología y cajetín ──
+  // ── Panel derecho: simbología (tabla) y cajetín ──
   const px = x1 + 40;
   const pw = 300;
-  const items: [string, string][] = [
-    [`<g transform="translate(14 0)">${simMedidor(0, 14, 10)}</g>`, 'Medidor de energía'],
-    [`<g transform="translate(14 -4) scale(0.8)">${simTM(0, 0, false)}</g>`, 'Interruptor termomagnético'],
-    [`<g transform="translate(16 -4) scale(0.8)">${simDif(0, 0, false)}</g>`, 'Interruptor diferencial'],
-    [`<g transform="translate(14 2)">${simTierra(0, 0, false)}</g>`, 'Puesta a tierra (TS servicio / TP protección)'],
-    [`<g transform="translate(14 2)">${linea(0, 0, 0, 28)}${trazos(0, 12, 3)}</g>`, 'Conductores (n° de trazos = n° de conductores)'],
-    [`<g transform="translate(0 14)">${linea(0, 0, 28, 0, 4)}</g>`, 'Barra de distribución'],
-    [`<rect x="2" y="4" width="24" height="20" fill="none" stroke="${AZUL}" stroke-dasharray="5 2.5"/>`, 'Límite de tablero / empalme'],
-    [flecha(14, 26), 'Salida de circuito'],
+  const cS = 64; // ancho de la columna de símbolos
+  const fila = 40;
+  const items: [string, string, string][] = [
+    [simMedidor(32, 20, 12), 'Medidor de energía', 'Empalme de la distribuidora'],
+    [`<g transform="translate(36 1) scale(0.95)">${simTM(0, 0, false)}</g>`, 'Interruptor termomagnético', 'In · polos · curva · Icu'],
+    [`<g transform="translate(38 1) scale(0.95)">${simDif(0, 0, false)}</g>`, 'Interruptor diferencial', 'In · polos · IΔn'],
+    [simTierra(32, 8, false), 'Puesta a tierra', 'TS servicio · TP protección'],
+    [`${linea(32, 4, 32, 36)}${trazos(32, 18, 3)}`, 'Conductores', 'N° de trazos = n° de conductores'],
+    [linea(14, 20, 50, 20, 4), 'Barra de distribución', 'Barra principal / sub-barra'],
+    [`<rect x="14" y="8" width="36" height="24" fill="none" stroke="${AZUL}" stroke-width="1.2" stroke-dasharray="6 3"/>`, 'Tablero / recinto de empalme', 'Límite del equipo'],
+    [`${linea(32, 4, 32, 34)}${flecha(32, 34)}`, 'Salida de circuito', 'Hacia los consumos'],
   ];
-  s.push(`<rect x="${px}" y="30" width="${pw}" height="${items.length * 38 + 34}" fill="none" stroke="${TRAZO}" stroke-width="1"/>`);
-  s.push(txt(px + 10, 48, 'SIMBOLOGÍA', { size: 10, bold: true, color: AZUL }));
-  items.forEach(([g, t], k) => {
-    const y = 58 + k * 38;
-    s.push(`<g transform="translate(${px + 12} ${y})">${g}</g>`);
-    s.push(txt(px + 60, y + 20, t, { size: 8.5 }));
+  const yS0 = 30;
+  const hHead = 40;
+  const abrev = [
+    'TG: tablero general · TS / TP: tierra de servicio / de protección',
+    'Icc: corriente de cortocircuito · Icu: capacidad de ruptura',
+    'IΔn: sensibilidad diferencial · 2P / 4P: n° de polos',
+    'B / C: curva de disparo · Ø: diámetro de ducto [mm]',
+  ];
+  const hTabla = hHead + 18 + items.length * fila;
+  const hS = hTabla + 22 + abrev.length * 12 + 8;
+  s.push(`<rect x="${px}" y="${yS0}" width="${pw}" height="${hS}" fill="#fff" stroke="${TRAZO}" stroke-width="1.2"/>`);
+  s.push(`<rect x="${px}" y="${yS0}" width="${pw}" height="26" fill="${AZUL}"/>`);
+  s.push(txt(px + pw / 2, yS0 + 17, 'SIMBOLOGÍA', { size: 11, bold: true, anchor: 'middle', color: '#fff' }));
+  s.push(`<rect x="${px}" y="${yS0 + 26}" width="${pw}" height="18" fill="#eef2f8"/>`);
+  s.push(txt(px + cS / 2, yS0 + 39, 'SÍMBOLO', { size: 7.5, bold: true, anchor: 'middle' }));
+  s.push(txt(px + cS + 10, yS0 + 39, 'DESCRIPCIÓN', { size: 7.5, bold: true }));
+  s.push(linea(px + cS, yS0 + 26, px + cS, yS0 + hTabla + 2, 0.6));
+  items.forEach(([g, t, sub], k) => {
+    const y = yS0 + hHead + 4 + k * fila;
+    s.push(linea(px, y, px + pw, y, 0.6));
+    s.push(`<g transform="translate(${px} ${y})">${g}</g>`);
+    s.push(txt(px + cS + 10, y + 17, t, { size: 8.5, bold: true }));
+    s.push(txt(px + cS + 10, y + 29, sub, { size: 7.5, color: '#555' }));
   });
+  const yA = yS0 + hTabla + 2;
+  s.push(linea(px, yA, px + pw, yA, 0.8));
+  s.push(txt(px + 10, yA + 15, 'ABREVIATURAS', { size: 8, bold: true, color: AZUL }));
+  abrev.forEach((t, k) => s.push(txt(px + 10, yA + 28 + k * 12, t, { size: 7 })));
 
   const v = (x: string) => x || '—';
   const filas: [string, string][] = [

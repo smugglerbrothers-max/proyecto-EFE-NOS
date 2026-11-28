@@ -19,4 +19,10 @@ export const EMPALME_MIN_VIVIENDA_A = 25;
 export const IN_MIN_POR_TIPO: Partial<Record<TipoCircuito, number>> = { cocina: 16, horno: 16 };
 
 /** Protecciones termomagnéticas comerciales [A] (criterio de mercado, no normativo). */
+/** Capacidades de ruptura comerciales [kA] (IEC 60898 / 60947-2). */
+export const CAPACIDADES_RUPTURA_KA = [3, 4.5, 6, 10, 15, 20, 25, 36, 50];
+
+/** Curva sugerida por tipo de circuito (RIC N°10 5.1.4.2, referencial). */
+export const curvaSugerida = (tipo: string) => (tipo === 'iluminacion' ? 'B' : 'C');
+
 export const PROTECCIONES = [6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125];
